@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -127,6 +128,18 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
+
+  ssd1306_Display(true);
+  ssd1306_Init();
+  ssd1306_SetCursor(3, 3);
+  ssd1306_WriteString("DISPLAY1", Font_11x18, White);
+  ssd1306_UpdateScreen();
+
+  ssd1306_Display(false);
+  ssd1306_Init();
+  ssd1306_SetCursor(3, 3);
+  ssd1306_WriteString("DISPLAY2", Font_11x18, White);
+  ssd1306_UpdateScreen();
 
   /* USER CODE END 2 */
 

@@ -66,6 +66,9 @@ _BEGIN_STD_C
 #define SSD1306_I2C_PORT        hi2c1
 #endif
 
+extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
+
 #ifndef SSD1306_I2C_ADDR
 #define SSD1306_I2C_ADDR        (0x3C << 1)
 #endif
