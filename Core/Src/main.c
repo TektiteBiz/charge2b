@@ -132,13 +132,13 @@ int main(void)
   ssd1306_Display(true);
   ssd1306_Init();
   ssd1306_SetCursor(3, 3);
-  ssd1306_WriteString("DISPLAY1", Font_11x18, White);
+  ssd1306_WriteString("D1 LOADING...", Font_11x18, White);
   ssd1306_UpdateScreen();
 
   ssd1306_Display(false);
   ssd1306_Init();
   ssd1306_SetCursor(3, 3);
-  ssd1306_WriteString("DISPLAY2", Font_11x18, White);
+  ssd1306_WriteString("D2 LOADING...", Font_11x18, White);
   ssd1306_UpdateScreen();
 
   /* USER CODE END 2 */
@@ -167,6 +167,13 @@ int main(void)
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  if (defaultTaskHandle == NULL) {
+	  ssd1306_Display(true);
+	         ssd1306_Fill(Black);
+	         ssd1306_SetCursor(0, 0);
+	         ssd1306_WriteString("ITS JOEVER", Font_11x18, White);
+	         ssd1306_UpdateScreen();
+  }
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -177,6 +184,7 @@ int main(void)
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
+  osKernelInitialize();
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
@@ -360,6 +368,9 @@ static void MX_ADC2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN ADC2_Init 2 */
+
+  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+  HAL_ADC_Start(&hadc2);
 
   /* USER CODE END ADC2_Init 2 */
 
@@ -795,11 +806,26 @@ void StartDefaultTask(void *argument)
 {
   /* init code for USB_Device */
   MX_USB_Device_Init();
+  ssd1306_Display(false);
+  	  	ssd1306_Fill(Black);
+  	  	ssd1306_SetCursor(3, 3);
+  	  	ssd1306_WriteString("HELLO", Font_11x18, White);
+  	  	ssd1306_UpdateScreen();
   /* USER CODE BEGIN 5 */
+  int cnt = 0;
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  osDelay(1000);
+	  	cnt++;
+	  	char text[12];
+	  	memset(&text, 0, sizeof(text));
+	  	sprintf((char*)&text, "%d", cnt);
+	  	ssd1306_Display(false);
+	  	ssd1306_Fill(Black);
+	  	ssd1306_SetCursor(3, 3);
+	  	ssd1306_WriteString((char*)&text, Font_11x18, White);
+	  	ssd1306_UpdateScreen();
   }
   /* USER CODE END 5 */
 }

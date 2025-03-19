@@ -36,7 +36,9 @@
 #include "stdio.h"
 #endif /* _TRACE */
 /* USER CODE BEGIN Includes */
-
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /** @addtogroup STM32_USBPD_APPLICATION
@@ -292,8 +294,9 @@ void USBPD_DPM_GetDataInfo(uint8_t PortNum, USBPD_CORE_DataInfoType_TypeDef Data
   /* Check type of information targeted by request */
   switch(DataId)
   {
-//  case USBPD_CORE_DATATYPE_SNK_PDO:           /*!< Handling of port Sink PDO, requested by get sink capa*/
-    // break;
+  case USBPD_CORE_DATATYPE_SNK_PDO:           /*!< Handling of port Sink PDO, requested by get sink capa*/
+	  USBPD_PWR_IF_GetPortPDOs(PortNum, DataId, Ptr, Size);
+      break;
 //  case USBPD_CORE_EXTENDED_CAPA:              /*!< Source Extended capability message content          */
     // break;
 //  case USBPD_CORE_DATATYPE_REQ_VOLTAGE:       /*!< Get voltage value requested for BIST tests, expect 5V*/
@@ -369,7 +372,43 @@ void USBPD_DPM_SetDataInfo(uint8_t PortNum, USBPD_CORE_DataInfoType_TypeDef Data
 void USBPD_DPM_SNK_EvaluateCapabilities(uint8_t PortNum, uint32_t *PtrRequestData, USBPD_CORE_PDO_Type_TypeDef *PtrPowerObjectType)
 {
 /* USER CODE BEGIN USBPD_DPM_SNK_EvaluateCapabilities */
-  DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_SNK_EvaluateCapabilities");
+
+
+ USBPD_SNKRDO_TypeDef rdo;
+ rdo.d32 = 0;
+ /* Prepare the requested pdo */
+ rdo.FixedVariableRDO.ObjectPosition = 1;
+ rdo.FixedVariableRDO.OperatingCurrentIn10mAunits = 50;
+ rdo.FixedVariableRDO.MaxOperatingCurrent10mAunits = 50;
+ rdo.FixedVariableRDO.CapabilityMismatch = 0;
+
+ *PtrPowerObjectType = USBPD_CORE_PDO_TYPE_FIXED;
+ *PtrRequestData = rdo.d32;
+
+ //USBPD_HandleTypeDef *pdhandle = &DPM_Params[PortNum];
+ uint32_t size;
+ uint32_t snkpdolist[USBPD_MAX_NB_PDO];  // Array to store sink PDOs
+ USBPD_PDO_TypeDef pdo;
+
+ // Get the list of sink PDOs
+ USBPD_PWR_IF_GetPortPDOs(PortNum, USBPD_CORE_DATATYPE_SNK_PDO, (uint8_t *)snkpdolist, &size);
+
+ ssd1306_Display(1);
+ ssd1306_Fill(Black);
+ ssd1306_SetCursor(0, 0);
+ ssd1306_WriteString("Available PDOs:", Font_11x18, White);
+
+ // Iterate through each sink PDO and print its details
+ for (uint32_t i = 0; i < size; i++)
+ {
+	 pdo.d32 = snkpdolist[i];  // Get each PDO
+	 char pdo_info[256];  // Adjust the size if needed
+	 snprintf(pdo_info, sizeof(pdo_info), "%u mV, %u mA", pdo.SNKFixedPDO.VoltageIn50mVunits*50, pdo.SNKFixedPDO.OperationalCurrentIn10mAunits * 10);
+	 ssd1306_SetCursor(0, 7 + i*7);
+	 ssd1306_WriteString(pdo_info, Font_11x18, White);
+ }
+ ssd1306_UpdateScreen();
+
 /* USER CODE END USBPD_DPM_SNK_EvaluateCapabilities */
 }
 
