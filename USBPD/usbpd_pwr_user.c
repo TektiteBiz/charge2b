@@ -27,7 +27,8 @@
 #endif /* _TRACE */
 
 /* USER CODE BEGIN include */
-
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END include */
 
 /** @addtogroup BSP
@@ -63,7 +64,13 @@
 #if defined(_TRACE)
 #define PWR_DEBUG_TRACE(_PORT_, __MESSAGE__)  USBPD_TRACE_Add(USBPD_TRACE_DEBUG,    (_PORT_), 0u, (uint8_t*)(__MESSAGE__), sizeof(__MESSAGE__) - 1u)
 #else
-#define PWR_DEBUG_TRACE(_PORT_, __MESSAGE__)
+#define PWR_DEBUG_TRACE(_PORT_, __MESSAGE__) { \
+ssd1306_Display(true); \
+	ssd1306_Fill(Black);\
+	  ssd1306_SetCursor(3, 3); \
+	  ssd1306_WriteString(__MESSAGE__, Font_6x8, White); \
+	  ssd1306_UpdateScreen(); \
+} while(0)
 #endif /* _TRACE */
 /* USER CODE BEGIN POWER_Private_Macros */
 
@@ -145,7 +152,7 @@ __weak int32_t BSP_USBPD_PWR_Deinit(uint32_t Instance)
   }
   else
   {
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_Deinit");
+    PWR_DEBUG_TRACE(Instance, "PWR_Deinit");
   }
 
   return ret;
@@ -175,7 +182,7 @@ __weak int32_t BSP_USBPD_PWR_SetRole(uint32_t Instance, USBPD_PWR_PowerRoleTypeD
   }
   else
   {
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_SetRole");
+    PWR_DEBUG_TRACE(Instance, "PWR_SetRole");
   }
 
   return ret;
@@ -207,7 +214,7 @@ __weak int32_t BSP_USBPD_PWR_SetPowerMode(uint32_t Instance, USBPD_PWR_PowerMode
   }
   else
   {
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_SetPowerMode");
+    PWR_DEBUG_TRACE(Instance, "PWR_SetPowerMode");
   }
 
   return ret;
@@ -239,7 +246,7 @@ __weak int32_t BSP_USBPD_PWR_GetPowerMode(uint32_t Instance, USBPD_PWR_PowerMode
   }
   else
   {
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_GetPowerMode");
+    PWR_DEBUG_TRACE(Instance, "PWR_GetPowerMode");
   }
   return ret;
   /* USER CODE END BSP_USBPD_PWR_GetPowerMode */
@@ -265,7 +272,7 @@ __weak int32_t BSP_USBPD_PWR_VBUSInit(uint32_t Instance)
   }
   else
   {
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_VBUSInit");
+    PWR_DEBUG_TRACE(Instance, "PWR_VBUSInit");
   }
 
   return ret;
@@ -314,7 +321,7 @@ __weak int32_t BSP_USBPD_PWR_VBUSOn(uint32_t Instance)
   else
   {
     ret = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_VBUSOn");
+    PWR_DEBUG_TRACE(Instance, "PWR_VBUSOn");
   }
   return ret;
   /* USER CODE END BSP_USBPD_PWR_VBUSOn */
@@ -340,7 +347,7 @@ __weak int32_t BSP_USBPD_PWR_VBUSOff(uint32_t Instance)
   else
   {
     ret = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_VBUSOff");
+    PWR_DEBUG_TRACE(Instance, "PWR_VBUSOff");
   }
   return ret;
   /* USER CODE END BSP_USBPD_PWR_VBUSOff */
@@ -726,7 +733,7 @@ __weak int32_t BSP_USBPD_PWR_VBUSIsOn(uint32_t Instance, uint8_t *pState)
   else
   {
     ret = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_VBUSIsOn");
+    PWR_DEBUG_TRACE(Instance, "PWR_VBUSIsOn");
   }
   *pState = state;
   return ret;
@@ -754,7 +761,7 @@ __weak int32_t BSP_USBPD_PWR_VCCSetState(uint32_t Instance, uint32_t State)
   else
   {
     ret = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-    PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_VCCSetState");
+    PWR_DEBUG_TRACE(Instance, "PWR_VCCSetState");
   }
   return ret;
   /* USER CODE END BSP_USBPD_PWR_VCCSetState */
@@ -772,7 +779,7 @@ __weak int32_t BSP_USBPD_PWR_VCCSetState(uint32_t Instance, uint32_t State)
 __weak void BSP_USBPD_PWR_EventCallback(uint32_t Instance)
 {
   /* USER CODE BEGIN BSP_USBPD_PWR_EventCallback */
-  PWR_DEBUG_TRACE(Instance, "ADVICE: Update BSP_USBPD_PWR_EventCallback");
+  PWR_DEBUG_TRACE(Instance, "PWR_EventCallback");
   /* USER CODE END BSP_USBPD_PWR_EventCallback */
 }
 

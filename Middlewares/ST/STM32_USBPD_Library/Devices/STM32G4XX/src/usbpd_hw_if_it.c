@@ -28,6 +28,8 @@
 #include "usbpd_timersserver.h"
 #endif /* _FRS */
 
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +45,13 @@ void USBPD_PORT0_IRQHandler(void)
 
 void PORTx_IRQHandler(uint8_t PortNum)
 {
+
+/*ssd1306_Display(true);
+ssd1306_Fill(Black);
+		  ssd1306_SetCursor(3, 3);
+		  ssd1306_WriteString("INTERRUPT", Font_11x18, White);
+		  ssd1306_UpdateScreen();*/
+
   UCPD_TypeDef *hucpd = Ports[PortNum].husbpd;
   uint32_t _interrupt = LL_UCPD_ReadReg(hucpd, SR);
   static uint8_t ovrflag = 0;

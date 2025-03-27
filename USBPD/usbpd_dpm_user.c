@@ -29,13 +29,13 @@
 #include "usbpd_vdm_user.h"
 #include "usbpd_pwr_if.h"
 #include "usbpd_pwr_user.h"
-#include "cmsis_os.h"
 #if defined(_TRACE)
 #include "usbpd_trace.h"
 #include "string.h"
 #include "stdio.h"
 #endif /* _TRACE */
 /* USER CODE BEGIN Includes */
+#include <string.h>
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 #include <stdio.h>
@@ -58,11 +58,6 @@
 /** @defgroup USBPD_USER_PRIVATE_DEFINES USBPD USER Private Defines
   * @{
   */
-#if (osCMSIS < 0x20000U)
-void                USBPD_DPM_UserExecute(void const *argument);
-#else
-void                USBPD_DPM_UserExecute(void *argument);
-#endif /* osCMSIS < 0x20000U */
 /* USER CODE BEGIN Private_Define */
 
 /* USER CODE END Private_Define */
@@ -97,8 +92,25 @@ void                USBPD_DPM_UserExecute(void *argument);
     }                                                                                                          \
   } while(0)
 #else
-#define DPM_USER_DEBUG_TRACE(_PORT_, ...)
-#define DPM_USER_ERROR_TRACE(_PORT_, _STATUS_, ...)
+#define DPM_USER_DEBUG_TRACE_SIZE       50u
+#define DPM_USER_DEBUG_TRACE(_PORT_, ...) do { \
+	char _str[DPM_USER_DEBUG_TRACE_SIZE];   \
+snprintf(_str, DPM_USER_DEBUG_TRACE_SIZE, __VA_ARGS__);                                  \
+ssd1306_Display(true); \
+	ssd1306_Fill(Black);\
+	  ssd1306_SetCursor(3, 3); \
+	  ssd1306_WriteString(_str, Font_6x8, White); \
+	  ssd1306_UpdateScreen(); \
+} while(0)
+#define DPM_USER_ERROR_TRACE(_PORT_, _STATUS_, ...)do { \
+		char _str[DPM_USER_DEBUG_TRACE_SIZE];   \
+	snprintf(_str, DPM_USER_DEBUG_TRACE_SIZE, __VA_ARGS__);                                  \
+	ssd1306_Display(true); \
+		ssd1306_Fill(Black);\
+		  ssd1306_SetCursor(3, 3); \
+		  ssd1306_WriteString(_str, Font_6x8, White); \
+		  ssd1306_UpdateScreen(); \
+} while(0)
 #endif /* _TRACE */
 /* USER CODE BEGIN Private_Macro */
 
@@ -163,7 +175,7 @@ USBPD_StatusTypeDef USBPD_DPM_UserInit(void)
   */
 void USBPD_DPM_WaitForTime(uint32_t Time)
 {
-  osDelay(Time);
+  HAL_Delay(Time);
 }
 
 /**
@@ -171,13 +183,19 @@ void USBPD_DPM_WaitForTime(uint32_t Time)
   * @param  argument  DPM User event
   * @retval None
   */
-#if (osCMSIS < 0x20000U)
 void USBPD_DPM_UserExecute(void const *argument)
-#else
-void USBPD_DPM_UserExecute(void *argument)
-#endif /* osCMSIS < 0x20000U */
 {
 /* USER CODE BEGIN USBPD_DPM_UserExecute */
+
+	if (HAL_GetTick() % 1000 < 10) {
+		ssd1306_Fill(Black);
+		ssd1306_Display(false);
+		  ssd1306_SetCursor(3, 3);
+		  char a[12];
+		  sprintf(a, "%d", (int)HAL_GetTick()/1000);
+		  ssd1306_WriteString(a, Font_11x18, White);
+		  ssd1306_UpdateScreen();
+	}
 
 /* USER CODE END USBPD_DPM_UserExecute */
 }
@@ -191,7 +209,10 @@ void USBPD_DPM_UserExecute(void *argument)
 void USBPD_DPM_UserCableDetection(uint8_t PortNum, USBPD_CAD_EVENT State)
 {
 /* USER CODE BEGIN USBPD_DPM_UserCableDetection */
-DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_UserCableDetection");
+	ssd1306_Display(true);
+	  ssd1306_SetCursor(3, 3);
+	  ssd1306_WriteString("CABLE DETECTED", Font_11x18, White);
+	  ssd1306_UpdateScreen();
 /* USER CODE END USBPD_DPM_UserCableDetection */
 }
 
@@ -260,7 +281,7 @@ void USBPD_DPM_Notification(uint8_t PortNum, USBPD_NotifyEventValue_TypeDef Even
 //    case USBPD_NOTIFY_DATAROLESWAP_UFP :
 //      break;
     default:
-      DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: USBPD_DPM_Notification:%d", EventVal);
+      DPM_USER_DEBUG_TRACE(PortNum, "DPM_Notification:%d", EventVal);
       break;
   }
 /* USER CODE END USBPD_DPM_Notification */
@@ -276,7 +297,7 @@ void USBPD_DPM_Notification(uint8_t PortNum, USBPD_NotifyEventValue_TypeDef Even
 void USBPD_DPM_HardReset(uint8_t PortNum, USBPD_PortPowerRole_TypeDef CurrentRole, USBPD_HR_Status_TypeDef Status)
 {
 /* USER CODE BEGIN USBPD_DPM_HardReset */
-  DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_HardReset");
+  DPM_USER_DEBUG_TRACE(PortNum, "DPM_HardReset");
 /* USER CODE END USBPD_DPM_HardReset */
 }
 
@@ -312,7 +333,7 @@ void USBPD_DPM_GetDataInfo(uint8_t PortNum, USBPD_CORE_DataInfoType_TypeDef Data
 //  case USBPD_CORE_BATTERY_CAPABILITY:         /*!< Retrieve of Battery capability message content      */
     // break;
   default:
-    DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_GetDataInfo:%d", DataId);
+    DPM_USER_DEBUG_TRACE(PortNum, "DPM_GetDataInfo:%d", DataId);
     break;
   }
 /* USER CODE END USBPD_DPM_GetDataInfo */
@@ -332,10 +353,44 @@ void USBPD_DPM_SetDataInfo(uint8_t PortNum, USBPD_CORE_DataInfoType_TypeDef Data
   /* Check type of information targeted by request */
   switch(DataId)
   {
-//  case USBPD_CORE_DATATYPE_RDO_POSITION:      /*!< Reset the PDO position selected by the sink only */
-    // break;
-//  case USBPD_CORE_DATATYPE_RCV_SRC_PDO:       /*!< Storage of Received Source PDO values        */
-    // break;
+  //case USBPD_CORE_DATATYPE_RDO_POSITION:      /*!< Reset the PDO position selected by the sink only */
+//    break;
+  case USBPD_CORE_DATATYPE_RCV_SRC_PDO:       /*!< Storage of Received Source PDO values        */
+	  ssd1306_Display(true);
+	  ssd1306_Fill(Black);
+	  ssd1306_SetCursor(0, 0);
+	  ssd1306_WriteString("RCV PDOs:", Font_6x8, White);
+      USBPD_PDO_TypeDef *pSrcPDO = (USBPD_PDO_TypeDef *)Ptr;
+	  uint8_t nb_pdo = Size / 4; // Each PDO is 4 bytes
+	  for (uint8_t i = 0; i < nb_pdo; i++)
+	        {
+	          uint32_t pdo_value = pSrcPDO[i].d32;
+	          uint8_t pdo_type = (pdo_value >> 28) & 0x07;
+
+	          switch (pdo_type)
+	          {
+	            case USBPD_PDO_TYPE_FIXED:
+	            {
+	              uint16_t voltage = ((pdo_value >> 10) & 0x3FF) * 50; // mV
+	              uint16_t current = (pdo_value & 0x3FF) * 10;    // mA
+	              char pdo_info[256];  // Adjust the size if needed
+				 snprintf(pdo_info, sizeof(pdo_info), "%u mV, %u mA", voltage, current);
+				 ssd1306_SetCursor(0, 7 + i*7);
+				 ssd1306_WriteString(pdo_info, Font_6x8, White);
+	              // Store this PDO information in your DPM (e.g., in an array)
+	              // You will likely need to select one of these PDOs later and send a Request.
+				 if (voltage == 20000) {
+					 USBPD_DPM_RequestMessageRequest(PortNum, i, 20000);
+				 }
+	              break;
+	            }
+	            default:
+	              //DPM_USER_DEBUG_TRACE(PortNum, "UnknownPDO:0x%02X", pdo_type);
+	              break;
+	          }
+	        }
+	  ssd1306_UpdateScreen();
+     break;
 //  case USBPD_CORE_DATATYPE_RCV_SNK_PDO:       /*!< Storage of Received Sink PDO values          */
     // break;
 //  case USBPD_CORE_EXTENDED_CAPA:              /*!< Source Extended capability message content   */
@@ -354,8 +409,10 @@ void USBPD_DPM_SetDataInfo(uint8_t PortNum, USBPD_CORE_DataInfoType_TypeDef Data
     // break;
 //  case USBPD_CORE_SNK_EXTENDED_CAPA:          /*!< Storing of Sink Extended capability message content       */
     // break;
+  //case USBPD_CORE_DATATYPE_RCV_REQ_PDO:
+	     // break;
   default:
-    DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_SetDataInfo:%d", DataId);
+    DPM_USER_DEBUG_TRACE(PortNum, "SetDataInfo:%d", DataId);
     break;
   }
 /* USER CODE END USBPD_DPM_SetDataInfo */
@@ -393,7 +450,7 @@ void USBPD_DPM_SNK_EvaluateCapabilities(uint8_t PortNum, uint32_t *PtrRequestDat
  // Get the list of sink PDOs
  USBPD_PWR_IF_GetPortPDOs(PortNum, USBPD_CORE_DATATYPE_SNK_PDO, (uint8_t *)snkpdolist, &size);
 
- ssd1306_Display(1);
+ ssd1306_Display(true);
  ssd1306_Fill(Black);
  ssd1306_SetCursor(0, 0);
  ssd1306_WriteString("Available PDOs:", Font_11x18, White);
@@ -593,7 +650,7 @@ USBPD_StatusTypeDef USBPD_DPM_RequestMessageRequest(uint8_t PortNum, uint8_t Ind
 /* USER CODE BEGIN USBPD_DPM_RequestMessageRequest */
   /* To be adapted to call the PE function */
   /*       _status = USBPD_PE_Send_Request(PortNum, rdo.d32, pdo_object);*/
-  DPM_USER_DEBUG_TRACE(PortNum, "ADVICE: update USBPD_DPM_RequestMessageRequest");
+  DPM_USER_DEBUG_TRACE(PortNum, "DPM_RequestMessageRequest");
 /* USER CODE END USBPD_DPM_RequestMessageRequest */
   DPM_USER_ERROR_TRACE(PortNum, _status, "REQUEST not accepted by the stack");
   return _status;
