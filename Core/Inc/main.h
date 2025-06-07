@@ -73,18 +73,24 @@ void Error_Handler(void);
 #define CTRL2_GPIO_Port GPIOA
 #define VBUS_Pin GPIO_PIN_6
 #define VBUS_GPIO_Port GPIOA
-#define LED2B_Pin GPIO_PIN_10
-#define LED2B_GPIO_Port GPIOB
+#define LED2R_Pin GPIO_PIN_6
+#define LED2R_GPIO_Port GPIOC
+#define LED2G_Pin GPIO_PIN_7
+#define LED2G_GPIO_Port GPIOC
+#define LED2B_Pin GPIO_PIN_8
+#define LED2B_GPIO_Port GPIOC
 #define LED1R_Pin GPIO_PIN_8
 #define LED1R_GPIO_Port GPIOA
 #define LED1G_Pin GPIO_PIN_9
 #define LED1G_GPIO_Port GPIOA
 #define LED1B_Pin GPIO_PIN_10
 #define LED1B_GPIO_Port GPIOA
-#define LED2R_Pin GPIO_PIN_15
-#define LED2R_GPIO_Port GPIOA
-#define LED2G_Pin GPIO_PIN_3
-#define LED2G_GPIO_Port GPIOB
+#define ALERT_Pin GPIO_PIN_2
+#define ALERT_GPIO_Port GPIOD
+#define MODE2_Pin GPIO_PIN_3
+#define MODE2_GPIO_Port GPIOB
+#define MODE1_Pin GPIO_PIN_4
+#define MODE1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
