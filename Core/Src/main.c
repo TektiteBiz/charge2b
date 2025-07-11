@@ -157,7 +157,7 @@ int main(void) {
     }
 
     if (i == 2 &&
-        (!FLOAT_EQUALS(voltage, 20.0f) || !FLOAT_EQUALS(current, 3.3f))) {
+        (!FLOAT_EQUALS(voltage, 20.0f) || !FLOAT_EQUALS(current, 3.2f))) {
       USB_WritePDO(i, 20.0f, 3.3f);
       needsWrite = true;
       printf("Updated PDO %d to Voltage - 20.0, Current - 3.3\n", i + 1);
@@ -197,9 +197,6 @@ int main(void) {
     if (a >= 1.0f) {
       a = 0.0f;
     }
-
-    uint8_t TxBuffer[] = "Hello World!\n";
-    CDC_Transmit_FS(TxBuffer, sizeof(TxBuffer));
   }
   /* USER CODE END 3 */
 }
