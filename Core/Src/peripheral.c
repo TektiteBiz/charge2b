@@ -39,8 +39,7 @@ HAL_StatusTypeDef USB_PDONumber(uint8_t* num) {
   return status;
 }
 
-// 0 for PDO 1, 1 for PDO 2, 2 for PDO 3
-HAL_StatusTypeDef USB_ReadPDO(uint8_t pdo_num, float* voltage, float* current) {
+HAL_StatusTypeDef USB_ReadPDO_Raw(uint8_t pdo_num, uint32_t* result) {
   uint8_t buf[4];
   uint32_t pdoData = 0;
 
@@ -55,6 +54,18 @@ HAL_StatusTypeDef USB_ReadPDO(uint8_t pdo_num, float* voltage, float* current) {
     uint32_t tempData = buf[i];
     tempData = (tempData << (i * 8));
     pdoData += tempData;
+  }
+
+  *result = pdoData;
+  return HAL_OK;
+}
+
+// 0 for PDO 1, 1 for PDO 2, 2 for PDO 3
+HAL_StatusTypeDef USB_ReadPDO(uint8_t pdo_num, float* voltage, float* current) {
+  uint32_t pdoData;
+  HAL_StatusTypeDef status = USB_ReadPDO_Raw(pdo_num, &pdoData);
+  if (status != HAL_OK) {
+    return status;
   }
 
   // Get voltage
@@ -96,5 +107,29 @@ HAL_StatusTypeDef USB_NegotiatedPDO(bool* result) {
   }
 
   *result = true;
+  return status;
+}
+
+// Can only do PDO num 1 & 2 (PDOs 2 and 3)
+HAL_StatusTypeDef USB_WritePDO(uint8_t pdo_num, float voltage, float current) {
+  uint32_t pdoData;
+  HAL_StatusTypeDef status = USB_ReadPDO_Raw(pdo_num, &pdoData);
+  if (status != HAL_OK) {
+    return status;
+  }
+
+  uint32_t volt = (uint32_t)(voltage * 20.0f);
+  uint32_t curr = (uint32_t)(current / 0.01f) & 0x3FF;
+
+  // Clear the voltage and current bits
+  pdoData &= ~(0x3FF << 10);  // Clear voltage bits
+  pdoData &= ~0x3FF;          // Clear current bits
+
+  // Set the new voltage and current bits
+  pdoData |= (volt << 10);  // Set voltage bits
+  pdoData |= curr;          // Set current bits
+
+  // Write PDO
+  USB_Write_Raw(0x85 + (pdo_num * 4), (uint8_t*)&pdoData, 4);
   return status;
 }
