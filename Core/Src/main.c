@@ -24,6 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "peripheral.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 #include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
@@ -126,7 +128,18 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
-  // USB Write PDOs
+  // Display
+  ssd1306_Display(true);
+  ssd1306_Init();
+  ssd1306_SetCursor(3, 3);
+  ssd1306_WriteString("D1 LOADING...", Font_11x18, White);
+  ssd1306_UpdateScreen();
+
+  ssd1306_Display(false);
+  ssd1306_Init();
+  ssd1306_SetCursor(3, 3);
+  ssd1306_WriteString("D2 LOADING...", Font_11x18, White);
+  ssd1306_UpdateScreen();
 
   // USB Read
   bool needsWrite = false;
