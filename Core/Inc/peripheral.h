@@ -1,0 +1,15 @@
+#ifndef __PERIPHERAL_H
+#define __PERIPHERAL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "main.h"
+void LEDWrite(bool LED1, float r, float g, float b);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __PERIPHERAL_H */
