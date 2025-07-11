@@ -165,6 +165,8 @@ int main(void) {
   }
 
   // Write if needed
+  // HAL_StatusTypeDef status = USB_WriteDefaultNVM();
+  // printf("Write Default NVM Status - %d\n", status);
   if (needsWrite) {
     HAL_StatusTypeDef status = USB_WriteNVMFromPDOs();
     printf("Write NVM from PDOs Status - %d\n", status);
@@ -176,7 +178,7 @@ int main(void) {
   printf("Active PDO: %d, Status - %d\n", active, status);
 
   bool negotiated;
-  USB_NegotiatedPDO(&negotiated);
+  status = USB_NegotiatedPDO(&negotiated);
   printf("Negotiated PD: %d\n", negotiated);
   /* USER CODE END 2 */
 

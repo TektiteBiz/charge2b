@@ -12,7 +12,7 @@ HAL_StatusTypeDef USB_PDONumber(uint8_t* num);
 HAL_StatusTypeDef USB_NegotiatedPDO(bool* result);
 HAL_StatusTypeDef USB_WriteNVMFromPDOs();
 HAL_StatusTypeDef USB_WritePDO(uint8_t pdo_num, float voltage, float current);
-
+HAL_StatusTypeDef USB_WriteDefaultNVM();
 #ifdef __cplusplus
 }
 #endif
