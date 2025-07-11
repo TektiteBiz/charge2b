@@ -7,6 +7,9 @@ extern "C" {
 
 #include "main.h"
 void LEDWrite(bool LED1, float r, float g, float b);
+HAL_StatusTypeDef USB_ReadPDO(uint8_t pdo_num, float* voltage, float* current);
+HAL_StatusTypeDef USB_PDONumber(uint8_t* num);
+HAL_StatusTypeDef USB_NegotiatedPDO(bool* result);
 
 #ifdef __cplusplus
 }

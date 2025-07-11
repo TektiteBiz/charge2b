@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "peripheral.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -124,6 +125,21 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+
+  // USB Read
+  for (int i = 0; i < 3; i++) {
+    float voltage, current;
+    HAL_StatusTypeDef status = USB_ReadPDO(i, &voltage, &current);
+    printf("PDO %d: Voltage - %f, Current - %f, Status - %d\n", i + 1, voltage,
+           current, status);
+  }
+  uint8_t active;
+  HAL_StatusTypeDef status = USB_PDONumber(&active);
+  printf("Active PDO: %d, Status - %d\n", active, status);
+
+  bool negotiated;
+  USB_NegotiatedPDO(&negotiated);
+  printf("Negotiated PD: %d\n", negotiated);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -141,6 +157,9 @@ int main(void) {
     if (a >= 1.0f) {
       a = 0.0f;
     }
+
+    uint8_t TxBuffer[] = "Hello World!\n";
+    CDC_Transmit_FS(TxBuffer, sizeof(TxBuffer));
   }
   /* USER CODE END 3 */
 }
