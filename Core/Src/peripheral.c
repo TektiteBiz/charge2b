@@ -133,3 +133,130 @@ HAL_StatusTypeDef USB_WritePDO(uint8_t pdo_num, float voltage, float current) {
   USB_Write_Raw(0x85 + (pdo_num * 4), (uint8_t*)&pdoData, 4);
   return status;
 }
+
+// Write current PDO settings to NVM (all 3 PDOs)
+HAL_StatusTypeDef USB_WriteNVMFromPDOs() {
+  uint8_t sector[5][8] = {0};
+  float voltage[3] = {0};
+  float current[3] = {0};
+  uint8_t nvmCurrent[3] = {0};
+  uint32_t digitalVoltage = 0;
+
+  // Read current PDOs and convert to NVM format
+  for (uint8_t i = 0; i < 3; i++) {
+    if (USB_ReadPDO(i, &voltage[i], &current[i]) != HAL_OK) return HAL_ERROR;
+
+    if (current[i] > 5.0f) current[i] = 5.0f;
+    if (current[i] < 0.5f)
+      nvmCurrent[i] = 0;
+    else if (current[i] <= 3.0f)
+      nvmCurrent[i] = (uint8_t)(4 * current[i] - 1);
+    else
+      nvmCurrent[i] = (uint8_t)(2 * current[i] + 5);
+
+    if (voltage[i] < 5.0f)
+      voltage[i] = 5.0f;
+    else if (voltage[i] > 20.0f)
+      voltage[i] = 20.0f;
+  }
+
+  // Pack current and voltage into sector buffer
+  sector[3][2] |= (nvmCurrent[0] << 4);  // PDO1 current (bits 4:7)
+  sector[3][4] |= nvmCurrent[1];         // PDO2 current (bits 0:3)
+  sector[3][5] |= (nvmCurrent[2] << 4);  // PDO3 current (bits 4:7)
+
+  // PDO2 voltage
+  digitalVoltage = (uint32_t)(voltage[1] * 20.0f);
+  sector[4][0] |= ((digitalVoltage & 0x03) << 6);  // bits 0:1 into bits 6:7
+  sector[4][1] = (digitalVoltage >> 2);            // bits 2:9
+
+  // PDO3 voltage
+  digitalVoltage = (uint32_t)(voltage[2] * 20.0f);
+  sector[4][2] = digitalVoltage & 0xFF;   // bits 0:7
+  sector[4][3] |= (digitalVoltage >> 8);  // bits 8:9 into bits 0:1
+
+  // Load highest priority PDO number from memory (sector 3, byte 2, bits 2:3)
+  uint8_t buf[1];
+  if (USB_Read_Raw(USB_DPM_PDO_NUMB, buf, 1) != HAL_OK) return HAL_ERROR;
+  sector[3][2] &= 0xF9;
+  sector[3][2] |= (buf[0] << 1) & 0x06;
+
+  // Enter NVM write mode (inline CUST_EnterWriteMode)
+  buf[0] = USB_FTP_CUST_PASSWORD;
+  if (USB_Write_Raw(USB_FTP_CUST_PASSWORD_REG, buf, 1) != HAL_OK)
+    return HAL_ERROR;
+  buf[0] = 0;
+  if (USB_Write_Raw(USB_RW_BUFFER, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = 0;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+
+  buf[0] = ((USB_SECTOR_0 | USB_SECTOR_1 | USB_SECTOR_2 | USB_SECTOR_3 |
+             USB_SECTOR_4)
+                << 3 &
+            USB_FTP_CUST_SER) |
+           (USB_WRITE_SER & USB_FTP_CUST_OPCODE);
+  if (USB_Write_Raw(USB_FTP_CTRL_1, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N | USB_FTP_CUST_REQ;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  do {
+    if (USB_Read_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  } while (buf[0] & USB_FTP_CUST_REQ);
+
+  buf[0] = USB_SOFT_PROG_SECTOR & USB_FTP_CUST_OPCODE;
+  if (USB_Write_Raw(USB_FTP_CTRL_1, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N | USB_FTP_CUST_REQ;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  do {
+    if (USB_Read_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  } while (buf[0] & USB_FTP_CUST_REQ);
+
+  buf[0] = USB_ERASE_SECTOR & USB_FTP_CUST_OPCODE;
+  if (USB_Write_Raw(USB_FTP_CTRL_1, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N | USB_FTP_CUST_REQ;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  do {
+    if (USB_Read_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  } while (buf[0] & USB_FTP_CUST_REQ);
+
+  // Write all sectors
+  for (uint8_t s = 0; s < 5; s++) {
+    if (USB_Write_Raw(USB_RW_BUFFER, sector[s], 8) != HAL_OK) return HAL_ERROR;
+    buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N;
+    if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+    buf[0] = USB_WRITE_PL & USB_FTP_CUST_OPCODE;
+    if (USB_Write_Raw(USB_FTP_CTRL_1, buf, 1) != HAL_OK) return HAL_ERROR;
+    buf[0] = USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N | USB_FTP_CUST_REQ;
+    if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+    do {
+      if (USB_Read_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+    } while (buf[0] & USB_FTP_CUST_REQ);
+
+    buf[0] = USB_PROG_SECTOR & USB_FTP_CUST_OPCODE;
+    if (USB_Write_Raw(USB_FTP_CTRL_1, buf, 1) != HAL_OK) return HAL_ERROR;
+    buf[0] = (s & USB_FTP_CUST_SECT) | USB_FTP_CUST_PWR | USB_FTP_CUST_RST_N |
+             USB_FTP_CUST_REQ;
+    if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+    do {
+      if (USB_Read_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+    } while (buf[0] & USB_FTP_CUST_REQ);
+  }
+
+  // Exit test mode (inline CUST_ExitTestMode)
+  buf[0] = USB_FTP_CUST_RST_N;
+  if (USB_Write_Raw(USB_FTP_CTRL_0, buf, 1) != HAL_OK) return HAL_ERROR;
+  buf[0] = 0x00;
+  if (USB_Write_Raw(USB_FTP_CUST_PASSWORD_REG, buf, 1) != HAL_OK)
+    return HAL_ERROR;
+
+  // Soft reset to load new NVM settings
+  uint8_t resetBuf[1];
+  resetBuf[0] = 0x0D;  // SOFT_RESET
+  if (USB_Write_Raw(USB_TX_HEADER_LOW, resetBuf, 1) != HAL_OK) return HAL_ERROR;
+  resetBuf[0] = 0x26;  // SEND_COMMAND
+  if (USB_Write_Raw(USB_PD_COMMAND_CTRL, resetBuf, 1) != HAL_OK)
+    return HAL_ERROR;
+
+  return HAL_OK;
+}

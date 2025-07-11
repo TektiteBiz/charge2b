@@ -129,12 +129,35 @@ int main(void) {
   // USB Write PDOs
 
   // USB Read
+  bool needsWrite = false;
   for (int i = 0; i < 3; i++) {
     float voltage, current;
     HAL_StatusTypeDef status = USB_ReadPDO(i, &voltage, &current);
     printf("PDO %d: Voltage - %f, Current - %f, Status - %d\n", i + 1, voltage,
            current, status);
+
+    if (i == 1 &&
+        (!FLOAT_EQUALS(voltage, 15.0f) || !FLOAT_EQUALS(current, 4.3f))) {
+      USB_WritePDO(i, 15.0f, 4.3f);
+      needsWrite = true;
+      printf("Updated PDO %d to Voltage - 15.0, Current - 4.3\n", i + 1);
+    }
+
+    if (i == 2 &&
+        (!FLOAT_EQUALS(voltage, 20.0f) || !FLOAT_EQUALS(current, 3.3f))) {
+      USB_WritePDO(i, 20.0f, 3.3f);
+      needsWrite = true;
+      printf("Updated PDO %d to Voltage - 20.0, Current - 3.3\n", i + 1);
+    }
   }
+
+  // Write if needed
+  if (needsWrite) {
+    HAL_StatusTypeDef status = USB_WriteNVMFromPDOs();
+    printf("Write NVM from PDOs Status - %d\n", status);
+  }
+
+  // Read active PDO number
   uint8_t active;
   HAL_StatusTypeDef status = USB_PDONumber(&active);
   printf("Active PDO: %d, Status - %d\n", active, status);
