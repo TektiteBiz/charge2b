@@ -34,11 +34,22 @@ HAL_StatusTypeDef USB_Read_Raw(uint8_t reg, uint8_t* dataR, uint16_t len) {
 }
 
 // Returns 0, 1, 2 for PDO 1, 2, 3 respectively
-HAL_StatusTypeDef USB_PDONumber(uint8_t* num) {
-  HAL_StatusTypeDef status = USB_Read_Raw(USB_DPM_PDO_NUMB, num, 1);
-  *num &= 0x07;
-  *num -= 1;
-  return status;
+HAL_StatusTypeDef USB_NegotiatedPower(bool* negotiated) {
+  // Read RDO_REG_STATUS_3 to get the "Object position" (Source's PDO index)
+  uint8_t rdo_status_3_raw;
+  HAL_StatusTypeDef status =
+      USB_Read_Raw(USB_RDO_REG_STATUS_3, &rdo_status_3_raw, 1);
+  if (status != HAL_OK) {
+    return status;
+  }
+  uint8_t source_pdo_index = (rdo_status_3_raw >> 4) & 0x07;
+  if (source_pdo_index <= 1) {
+    *negotiated = false;
+    return HAL_OK;
+  }
+
+  *negotiated = true;
+  return HAL_OK;
 }
 
 HAL_StatusTypeDef USB_ReadPDO_Raw(uint8_t pdo_num, uint32_t* result) {

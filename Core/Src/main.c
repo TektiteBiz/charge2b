@@ -201,10 +201,10 @@ int main(void) {
     HAL_Delay(250);
   }
 
-  uint8_t active;
-  USB_PDONumber(&active);
-  printf("Active PDO: %d\n", active);
-  if (active != 1 && active != 2) {  // Not 65W brick
+  bool active;
+  USB_NegotiatedPower(&active);
+  printf("Active PDO voltage: %d\n", active);
+  if (!active) {  // Not 65W brick
     LEDWrite(true, 0.1f, 0.0f, 0.0f);
     LEDWrite(false, 0.1f, 0.0f, 0.0f);
     DisplayLoadingText("UNDER 65W BRICK");
@@ -232,34 +232,11 @@ int main(void) {
 
     /* USER CODE BEGIN 3 */
     // Read active PDO number
-    uint8_t active;
-    HAL_StatusTypeDef status = USB_PDONumber(&active);
-    printf("Active PDO: %d, Status - %d\n", active, status);
-
-    // Display PDO
+    // Display that >65W brick is connected on the screen (no USB reads)
     ssd1306_Display(true);
     ssd1306_Fill(Black);
-    ssd1306_SetCursor(2, 2);
-    ssd1306_WriteString("Active PDO:", Font_6x8, White);
-    ssd1306_SetCursor(50, 2);
-    ssd1306_WriteString((active == 1)   ? "2"
-                        : (active == 2) ? "3"
-                                        : "Unknown",
-                        Font_6x8, White);
-    ssd1306_SetCursor(2, 12);
-    ssd1306_WriteString("Voltage:", Font_6x8, White);
-    ssd1306_SetCursor(2, 22);
-    ssd1306_WriteString("Current:", Font_6x8, White);
-    ssd1306_SetCursor(50, 12);
-    ssd1306_WriteString((active == 1)   ? "15.0V"
-                        : (active == 2) ? "20.0V"
-                                        : "Unknown",
-                        Font_6x8, White);
-    ssd1306_SetCursor(50, 22);
-    ssd1306_WriteString((active == 1)   ? "4.3A"
-                        : (active == 2) ? "3.2A"
-                                        : "Unknown",
-                        Font_6x8, White);
+    ssd1306_SetCursor(0, 0);
+    ssd1306_WriteString("USB PDO Negotiated", Font_6x8, White);
     ssd1306_UpdateScreen();
     HAL_Delay(1000);
   }

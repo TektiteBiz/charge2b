@@ -34,3 +34,6 @@
 #define USB_PORT_STATUS_0 0x0D
 #define USB_PE_FSM 0x29
 #define USB_PE_SNK_READY_STATE 0x18  // 00011000b
+
+#define USB_RDO_REG_STATUS_3 0x94
+#define USB_RX_DATA_OBJ1_0 0x33  // Start of RX Data Object 1
