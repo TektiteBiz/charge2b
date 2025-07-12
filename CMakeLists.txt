@@ -51,6 +51,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/peripheral.c
     Core/Src/ssd1306.c
     Core/Src/ssd1306_fonts.c
+    Core/Src/fsm.c
 )
 
 # Add include paths

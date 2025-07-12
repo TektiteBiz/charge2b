@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fsm.h"
 #include "peripheral.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
@@ -46,6 +47,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
+DMA_HandleTypeDef hdma_adc;
 
 DAC_HandleTypeDef hdac;
 
@@ -64,6 +66,7 @@ UART_HandleTypeDef huart1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC_Init(void);
 static void MX_DAC_Init(void);
 static void MX_I2C1_Init(void);
@@ -126,6 +129,7 @@ int main(void) {
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC_Init();
   MX_DAC_Init();
   MX_I2C1_Init();
@@ -136,6 +140,7 @@ int main(void) {
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // Start LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
@@ -143,21 +148,24 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
+  // Start ADC
+  HAL_ADC_Start_DMA(&hadc, (uint32_t *)batt_adc, 5);
+
   // Display
-  LEDWrite(true, 0.04f, 0.04f, 0.04f);
-  LEDWrite(false, 0.04f, 0.04f, 0.04f);
+  LEDWrite(true, 0.0f, 0.0f, 0.08f);
+  LEDWrite(false, 0.0f, 0.0f, 0.08f);
   ssd1306_Display(true);
   ssd1306_Init();
   ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);
-  ssd1306_SetCursor(43, 54);
-  ssd1306_WriteString("LOADING", Font_6x8, White);
+  ssd1306_SetCursor(19, 54);
+  ssd1306_WriteString("NEGOTIATING PDO", Font_6x8, White);
   ssd1306_UpdateScreen();
 
   ssd1306_Display(false);
   ssd1306_Init();
   ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);
-  ssd1306_SetCursor(43, 54);
-  ssd1306_WriteString("LOADING", Font_11x18, White);
+  ssd1306_SetCursor(19, 54);
+  ssd1306_WriteString("NEGOTIATING PDO", Font_6x8, White);
   ssd1306_UpdateScreen();
 
   // USB Read
@@ -192,9 +200,6 @@ int main(void) {
   }
 
   bool negotiated = false;
-  DisplayLoadingText("NEGOTIATING PDO");
-  LEDWrite(true, 0.0f, 0.0f, 0.1f);
-  LEDWrite(false, 0.0f, 0.0f, 0.1f);
   while (!negotiated) {
     USB_NegotiatedPDO(&negotiated);
     printf("Negotiated PDO: %d\n", negotiated);
@@ -238,7 +243,10 @@ int main(void) {
     ssd1306_SetCursor(0, 0);
     ssd1306_WriteString("USB PDO Negotiated", Font_6x8, White);
     ssd1306_UpdateScreen();
-    HAL_Delay(1000);
+    HAL_Delay(100);
+
+    printf("batt1h:%u, batt1l:%u, batt2h:%u, batt2l:%u, vbus:%u\n", batt_adc[0],
+           batt_adc[1], batt_adc[2], batt_adc[3], batt_adc[4]);
   }
   /* USER CODE END 3 */
 }
@@ -334,11 +342,11 @@ static void MX_ADC_Init(void) {
   hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = DISABLE;
+  hadc.Init.DMAContinuousRequests = ENABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   if (HAL_ADC_Init(&hadc) != HAL_OK) {
     Error_Handler();
@@ -348,7 +356,7 @@ static void MX_ADC_Init(void) {
    */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }
@@ -668,6 +676,19 @@ static void MX_USART1_UART_Init(void) {
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
+}
+
+/**
+ * Enable DMA controller clock
+ */
+static void MX_DMA_Init(void) {
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 /**
