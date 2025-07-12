@@ -140,6 +140,12 @@ int main(void) {
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // Start DAC
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
+  WriteCurrent(true, 0.0f);
+  WriteCurrent(false, 0.0f);
+
   // Start LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -151,15 +157,9 @@ int main(void) {
   // Start ADC
   HAL_ADC_Start_DMA(&hadc, (uint32_t *)batt_adc, 5);
 
-  // Start DMA
-  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
-  HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
-
   // Display
   LEDWrite(true, 0.0f, 0.0f, 0.08f);
   LEDWrite(false, 0.0f, 0.0f, 0.08f);
-  WriteCurrent(true, 0.0f);
-  WriteCurrent(false, 0.0f);
 
   ssd1306_Display(true);
   ssd1306_Init();
@@ -225,6 +225,14 @@ int main(void) {
     }
   }
 
+  // Initialize filters
+  float batt1h = SCALE_ANALOG(batt_adc[0]);
+  float batt2h = SCALE_ANALOG(batt_adc[1]);
+  float batt1l = SCALE_ANALOG(batt_adc[2]);
+  float batt2l = SCALE_ANALOG(batt_adc[3]);
+  float vbus = SCALE_ANALOG(batt_adc[4]);
+
+  // Clear
   ssd1306_Display(true);
   ssd1306_Fill(Black);
   ssd1306_UpdateScreen();
@@ -243,18 +251,75 @@ int main(void) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // Read active PDO number
-    // Display that >65W brick is connected on the screen (no USB reads)
+    batt1h = batt1h * 0.9 + SCALE_ANALOG(batt_adc[0]) * 0.1;
+    batt2h = batt2h * 0.9 + SCALE_ANALOG(batt_adc[1]) * 0.1;
+    batt1l = batt1l * 0.9 + SCALE_ANALOG(batt_adc[2]) * 0.1;
+    batt2l = batt2l * 0.9 + SCALE_ANALOG(batt_adc[3]) * 0.1;
+    vbus = vbus * 0.9 + SCALE_ANALOG(batt_adc[4]) * 0.1;
+    printf("batt1h:%f, batt2h:%f, batt1l:%f, batt2l:%f, vbus:%f\n", batt1h,
+           batt2h, batt1l, batt2l, vbus);
+    WriteCurrent(true, 0.5f);
+
+    // Display voltage current and power
+    float v1 = batt1h - batt1l;
+    float c1 = 0.5f;  // 50mohm sense resistor
+    float v2 = batt2h - batt2l;
+    float c2 = 0.0f;  // 50mohm sense resistor
+    float p1 = v1 * c1;
+    float p2 = v2 * c2;
+
+    // Display on Display(true) for batt1 and Display(false) for batt2
     ssd1306_Display(true);
     ssd1306_Fill(Black);
     ssd1306_SetCursor(0, 0);
-    ssd1306_WriteString("USB PDO Negotiated", Font_6x8, White);
+    ssd1306_WriteString("Batt 1:", Font_6x8, White);
+    ssd1306_SetCursor(0, 10);
+    ssd1306_WriteString("Voltage: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 10);
+    char v1_buf[12];
+    snprintf(v1_buf, sizeof(v1_buf), "%.2f", v1);
+    ssd1306_WriteString(v1_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 20);
+    ssd1306_WriteString("Current: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 20);
+    char c1_buf[12];
+    snprintf(c1_buf, sizeof(c1_buf), "%.2f", c1);
+    ssd1306_WriteString(c1_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 30);
+    ssd1306_WriteString("Power: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 30);
+    char p1_buf[12];
+    snprintf(p1_buf, sizeof(p1_buf), "%.2f", p1);
+    ssd1306_WriteString(p1_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 40);
     ssd1306_UpdateScreen();
-    HAL_Delay(100);
 
-    printf("batt1h:%u, batt1l:%u, batt2h:%u, batt2l:%u, vbus:%u\n", batt_adc[0],
-           batt_adc[1], batt_adc[2], batt_adc[3], batt_adc[4]);
-    WriteCurrent(true, 0.5f);
+    ssd1306_Display(false);
+    ssd1306_Fill(Black);
+    ssd1306_SetCursor(0, 0);
+    ssd1306_WriteString("Batt 2:", Font_6x8, White);
+    ssd1306_SetCursor(0, 10);
+    ssd1306_WriteString("Voltage: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 10);
+    char v2_buf[12];
+    snprintf(v2_buf, sizeof(v2_buf), "%.2f", v2);
+    ssd1306_WriteString(v2_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 20);
+    ssd1306_WriteString("Current: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 20);
+    char c2_buf[12];
+    snprintf(c2_buf, sizeof(c2_buf), "%.2f", c2);
+    ssd1306_WriteString(c2_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 30);
+    ssd1306_WriteString("Power: ", Font_6x8, White);
+    ssd1306_SetCursor(60, 30);
+    char p2_buf[12];
+    snprintf(p2_buf, sizeof(p2_buf), "%.2f", p2);
+    ssd1306_WriteString(p2_buf, Font_6x8, White);
+    ssd1306_SetCursor(0, 40);
+    ssd1306_UpdateScreen();
+
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }

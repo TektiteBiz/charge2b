@@ -535,3 +535,5 @@ void WriteCurrent(bool chan1, float current) {
       &hdac, chan1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2, DAC_ALIGN_12B_R,
       (uint32_t)(volt * 4095.0f / 3.3f));  // Convert to 12-bit value
 }
+
+const float ANALOG_SCALE = (3.3f / 4095.0f) * ((2000.0f + 330.0f) / 330.0f);
