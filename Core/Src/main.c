@@ -151,9 +151,16 @@ int main(void) {
   // Start ADC
   HAL_ADC_Start_DMA(&hadc, (uint32_t *)batt_adc, 5);
 
+  // Start DMA
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
+
   // Display
   LEDWrite(true, 0.0f, 0.0f, 0.08f);
   LEDWrite(false, 0.0f, 0.0f, 0.08f);
+  WriteCurrent(true, 0.0f);
+  WriteCurrent(false, 0.0f);
+
   ssd1306_Display(true);
   ssd1306_Init();
   ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);
@@ -247,6 +254,7 @@ int main(void) {
 
     printf("batt1h:%u, batt1l:%u, batt2h:%u, batt2l:%u, vbus:%u\n", batt_adc[0],
            batt_adc[1], batt_adc[2], batt_adc[3], batt_adc[4]);
+    WriteCurrent(true, 0.5f);
   }
   /* USER CODE END 3 */
 }

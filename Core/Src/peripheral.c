@@ -517,3 +517,21 @@ HAL_StatusTypeDef USB_WriteDefaultNVM() {
 
   return HAL_OK;
 }
+
+// DAC
+extern DAC_HandleTypeDef hdac;
+void WriteCurrent(bool chan1, float current) {
+  // Calculate needed voltage
+  float volt = 0.0f;
+  if (current < 0.2f) {  // Cannot module below 10%
+    volt = 0.0f;
+  } else {
+    // 0.4V for 10% (0.2A), 2.5V for 100% (2.0A)
+    // Linear mapping: volt = 0.4 + (current - 0.2) * (2.5 - 0.4) / (2.0 - 0.2)
+    volt = 0.4f + (current - 0.2f) * (2.1f / 1.8f);
+    if (volt > 2.5f) volt = 2.5f;
+  }
+  HAL_DAC_SetValue(
+      &hdac, chan1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2, DAC_ALIGN_12B_R,
+      (uint32_t)(volt * 4095.0f / 3.3f));  // Convert to 12-bit value
+}
