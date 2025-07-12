@@ -26,4 +26,6 @@ extern const SSD1306_Font_t Font_16x24;
 extern const SSD1306_Font_t Font_16x15;
 #endif
 
+extern const unsigned char tektite_logo[];
+
 #endif  // __SSD1306_FONTS_H__

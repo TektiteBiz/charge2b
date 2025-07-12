@@ -7,9 +7,9 @@ extern TIM_HandleTypeDef htim3;
 
 void LEDWrite(bool LED1, float r, float g, float b) {
   TIM_HandleTypeDef* htim = LED1 ? &htim1 : &htim3;
-  __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (uint32_t)(r * 65535.0f));
+  __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_3, (uint32_t)(r * 65535.0f));
   __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (uint32_t)(g * 65535.0f));
-  __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_3, (uint32_t)(b * 65535.0f));
+  __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (uint32_t)(b * 65535.0f));
 }
 
 extern I2C_HandleTypeDef hi2c1;
@@ -33,9 +33,11 @@ HAL_StatusTypeDef USB_Read_Raw(uint8_t reg, uint8_t* dataR, uint16_t len) {
   return HAL_I2C_Master_Receive(&hi2c1, USB_ADDRESS, dataR, len, HAL_MAX_DELAY);
 }
 
+// Returns 0, 1, 2 for PDO 1, 2, 3 respectively
 HAL_StatusTypeDef USB_PDONumber(uint8_t* num) {
   HAL_StatusTypeDef status = USB_Read_Raw(USB_DPM_PDO_NUMB, num, 1);
   *num &= 0x07;
+  *num -= 1;
   return status;
 }
 
@@ -88,12 +90,14 @@ HAL_StatusTypeDef USB_NegotiatedPDO(bool* result) {
     return status;
   }
 
-  bool attached = (portStatus & (1 << 0)) != 0;     // Bit 0: ATTACH_STATUS
+  /*bool attached = (portStatus & (1 << 0)) != 0;     // Bit 0: ATTACH_STATUS
   bool vbusPresent = (portStatus & (1 << 1)) != 0;  // Bit 1: VBUS_PRESENT
+  printf("USB Port Status - Attached: %d, VBUS Present: %d\n", attached,
+         vbusPresent);
   if (!attached || !vbusPresent) {
     *result = false;
     return HAL_OK;
-  }
+  }*/
 
   uint8_t peFsm;
   status = USB_Read_Raw(USB_PE_FSM, &peFsm, 1);

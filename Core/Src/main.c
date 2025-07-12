@@ -81,6 +81,21 @@ int _write(int file, char *ptr, int len) {
   HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
   return len;
 }
+
+void DisplayLoadingText(const char *text) {
+  int startX = (128 - (strlen(text) * 6)) / 2;
+  ssd1306_Display(true);
+  ssd1306_FillRectangle(0, 52, 128, 64, Black);
+  ssd1306_SetCursor(startX, 54);
+  ssd1306_WriteString((char *)text, Font_6x8, White);
+  ssd1306_UpdateScreen();
+
+  ssd1306_Display(false);
+  ssd1306_FillRectangle(0, 52, 128, 64, Black);
+  ssd1306_SetCursor(startX, 54);
+  ssd1306_WriteString((char *)text, Font_6x8, White);
+  ssd1306_UpdateScreen();
+}
 /* USER CODE END 0 */
 
 /**
@@ -129,16 +144,20 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
   // Display
+  LEDWrite(true, 0.04f, 0.04f, 0.04f);
+  LEDWrite(false, 0.04f, 0.04f, 0.04f);
   ssd1306_Display(true);
   ssd1306_Init();
-  ssd1306_SetCursor(3, 3);
-  ssd1306_WriteString("D1 LOADING...", Font_11x18, White);
+  ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);
+  ssd1306_SetCursor(43, 54);
+  ssd1306_WriteString("LOADING", Font_6x8, White);
   ssd1306_UpdateScreen();
 
   ssd1306_Display(false);
   ssd1306_Init();
-  ssd1306_SetCursor(3, 3);
-  ssd1306_WriteString("D2 LOADING...", Font_11x18, White);
+  ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);
+  ssd1306_SetCursor(43, 54);
+  ssd1306_WriteString("LOADING", Font_11x18, White);
   ssd1306_UpdateScreen();
 
   // USB Read
@@ -158,9 +177,9 @@ int main(void) {
 
     if (i == 2 &&
         (!FLOAT_EQUALS(voltage, 20.0f) || !FLOAT_EQUALS(current, 3.2f))) {
-      USB_WritePDO(i, 20.0f, 3.3f);
+      USB_WritePDO(i, 20.0f, 3.2f);
       needsWrite = true;
-      printf("Updated PDO %d to Voltage - 20.0, Current - 3.3\n", i + 1);
+      printf("Updated PDO %d to Voltage - 20.0, Current - 3.2\n", i + 1);
     }
   }
 
@@ -172,31 +191,77 @@ int main(void) {
     printf("Write NVM from PDOs Status - %d\n", status);
   }
 
-  // Read active PDO number
-  uint8_t active;
-  HAL_StatusTypeDef status = USB_PDONumber(&active);
-  printf("Active PDO: %d, Status - %d\n", active, status);
+  bool negotiated = false;
+  DisplayLoadingText("NEGOTIATING PDO");
+  LEDWrite(true, 0.0f, 0.0f, 0.1f);
+  LEDWrite(false, 0.0f, 0.0f, 0.1f);
+  while (!negotiated) {
+    USB_NegotiatedPDO(&negotiated);
+    printf("Negotiated PDO: %d\n", negotiated);
+    HAL_Delay(250);
+  }
 
-  bool negotiated;
-  status = USB_NegotiatedPDO(&negotiated);
-  printf("Negotiated PD: %d\n", negotiated);
+  uint8_t active;
+  USB_PDONumber(&active);
+  printf("Active PDO: %d\n", active);
+  if (active != 1 && active != 2) {  // Not 65W brick
+    LEDWrite(true, 0.1f, 0.0f, 0.0f);
+    LEDWrite(false, 0.1f, 0.0f, 0.0f);
+    DisplayLoadingText("UNDER 65W BRICK");
+    while (1) {
+      HAL_Delay(1000);
+    }
+  }
+
+  ssd1306_Display(true);
+  ssd1306_Fill(Black);
+  ssd1306_UpdateScreen();
+
+  ssd1306_Display(false);
+  ssd1306_Fill(Black);
+  ssd1306_UpdateScreen();
+
+  LEDWrite(true, 0.0f, 0.0f, 0.0f);
+  LEDWrite(false, 0.0f, 0.0f, 0.0f);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  float a = 0;
   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    printf("Hello World!\n");
-    HAL_Delay(10);
-    LEDWrite(true, a * 0.1, (1 - a) * 0.1, a * 0.1);
-    LEDWrite(false, (1 - a) * 0.1, a * 0.1, (1 - a) * 0.1);
-    a += 0.005;
-    if (a >= 1.0f) {
-      a = 0.0f;
-    }
+    // Read active PDO number
+    uint8_t active;
+    HAL_StatusTypeDef status = USB_PDONumber(&active);
+    printf("Active PDO: %d, Status - %d\n", active, status);
+
+    // Display PDO
+    ssd1306_Display(true);
+    ssd1306_Fill(Black);
+    ssd1306_SetCursor(2, 2);
+    ssd1306_WriteString("Active PDO:", Font_6x8, White);
+    ssd1306_SetCursor(50, 2);
+    ssd1306_WriteString((active == 1)   ? "2"
+                        : (active == 2) ? "3"
+                                        : "Unknown",
+                        Font_6x8, White);
+    ssd1306_SetCursor(2, 12);
+    ssd1306_WriteString("Voltage:", Font_6x8, White);
+    ssd1306_SetCursor(2, 22);
+    ssd1306_WriteString("Current:", Font_6x8, White);
+    ssd1306_SetCursor(50, 12);
+    ssd1306_WriteString((active == 1)   ? "15.0V"
+                        : (active == 2) ? "20.0V"
+                                        : "Unknown",
+                        Font_6x8, White);
+    ssd1306_SetCursor(50, 22);
+    ssd1306_WriteString((active == 1)   ? "4.3A"
+                        : (active == 2) ? "3.2A"
+                                        : "Unknown",
+                        Font_6x8, White);
+    ssd1306_UpdateScreen();
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
