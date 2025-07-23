@@ -251,75 +251,10 @@ int main(void) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    batt1h = batt1h * 0.9 + SCALE_ANALOG(batt_adc[0]) * 0.1;
-    batt2h = batt2h * 0.9 + SCALE_ANALOG(batt_adc[1]) * 0.1;
-    batt1l = batt1l * 0.9 + SCALE_ANALOG(batt_adc[2]) * 0.1;
-    batt2l = batt2l * 0.9 + SCALE_ANALOG(batt_adc[3]) * 0.1;
-    vbus = vbus * 0.9 + SCALE_ANALOG(batt_adc[4]) * 0.1;
-    printf("batt1h:%f, batt2h:%f, batt1l:%f, batt2l:%f, vbus:%f\n", batt1h,
-           batt2h, batt1l, batt2l, vbus);
-    WriteCurrent(true, 0.5f);
-
-    // Display voltage current and power
-    float v1 = batt1h - batt1l;
-    float c1 = 0.5f;  // 50mohm sense resistor
-    float v2 = batt2h - batt2l;
-    float c2 = 0.0f;  // 50mohm sense resistor
-    float p1 = v1 * c1;
-    float p2 = v2 * c2;
-
-    // Display on Display(true) for batt1 and Display(false) for batt2
-    ssd1306_Display(true);
-    ssd1306_Fill(Black);
-    ssd1306_SetCursor(0, 0);
-    ssd1306_WriteString("Batt 1:", Font_6x8, White);
-    ssd1306_SetCursor(0, 10);
-    ssd1306_WriteString("Voltage: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 10);
-    char v1_buf[12];
-    snprintf(v1_buf, sizeof(v1_buf), "%.2f", v1);
-    ssd1306_WriteString(v1_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 20);
-    ssd1306_WriteString("Current: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 20);
-    char c1_buf[12];
-    snprintf(c1_buf, sizeof(c1_buf), "%.2f", c1);
-    ssd1306_WriteString(c1_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 30);
-    ssd1306_WriteString("Power: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 30);
-    char p1_buf[12];
-    snprintf(p1_buf, sizeof(p1_buf), "%.2f", p1);
-    ssd1306_WriteString(p1_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 40);
-    ssd1306_UpdateScreen();
-
-    ssd1306_Display(false);
-    ssd1306_Fill(Black);
-    ssd1306_SetCursor(0, 0);
-    ssd1306_WriteString("Batt 2:", Font_6x8, White);
-    ssd1306_SetCursor(0, 10);
-    ssd1306_WriteString("Voltage: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 10);
-    char v2_buf[12];
-    snprintf(v2_buf, sizeof(v2_buf), "%.2f", v2);
-    ssd1306_WriteString(v2_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 20);
-    ssd1306_WriteString("Current: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 20);
-    char c2_buf[12];
-    snprintf(c2_buf, sizeof(c2_buf), "%.2f", c2);
-    ssd1306_WriteString(c2_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 30);
-    ssd1306_WriteString("Power: ", Font_6x8, White);
-    ssd1306_SetCursor(60, 30);
-    char p2_buf[12];
-    snprintf(p2_buf, sizeof(p2_buf), "%.2f", p2);
-    ssd1306_WriteString(p2_buf, Font_6x8, White);
-    ssd1306_SetCursor(0, 40);
-    ssd1306_UpdateScreen();
-
-    HAL_Delay(100);
+    fsm_Run(true);
+    HAL_Delay(50);
+    fsm_Run(false);
+    HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
@@ -458,6 +393,13 @@ static void MX_ADC_Init(void) {
   /** Configure for the selected ADC regular channel to be converted.
    */
   sConfig.Channel = ADC_CHANNEL_6;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel to be converted.
+   */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }
@@ -776,10 +718,20 @@ static void MX_GPIO_Init(void) {
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, EN1_Pin | EN2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : EN1_Pin EN2_Pin */
+  GPIO_InitStruct.Pin = EN1_Pin | EN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ALERT_Pin */
   GPIO_InitStruct.Pin = ALERT_Pin;

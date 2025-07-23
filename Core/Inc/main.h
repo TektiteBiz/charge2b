@@ -62,14 +62,18 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BATT1H_Pin GPIO_PIN_0
-#define BATT1H_GPIO_Port GPIOA
-#define BATT2H_Pin GPIO_PIN_1
-#define BATT2H_GPIO_Port GPIOA
-#define BATT1L_Pin GPIO_PIN_2
-#define BATT1L_GPIO_Port GPIOA
-#define BATT2L_Pin GPIO_PIN_3
-#define BATT2L_GPIO_Port GPIOA
+#define EN1_Pin GPIO_PIN_2
+#define EN1_GPIO_Port GPIOC
+#define EN2_Pin GPIO_PIN_3
+#define EN2_GPIO_Port GPIOC
+#define BATT1_Pin GPIO_PIN_0
+#define BATT1_GPIO_Port GPIOA
+#define BATT2_Pin GPIO_PIN_1
+#define BATT2_GPIO_Port GPIOA
+#define CURR1_Pin GPIO_PIN_2
+#define CURR1_GPIO_Port GPIOA
+#define CURR2_Pin GPIO_PIN_3
+#define CURR2_GPIO_Port GPIOA
 #define CTRL1_Pin GPIO_PIN_4
 #define CTRL1_GPIO_Port GPIOA
 #define CTRL2_Pin GPIO_PIN_5
