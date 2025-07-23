@@ -5,13 +5,7 @@
 #include "ssd1306_fonts.h"
 
 uint16_t batt_adc[5];
-
-// FSM handlers
-void fsm_DISCONNECTED(bool batt1) {
-  // Writes
-  WriteCurrent(batt1, 0.0f);
-  LEDWrite(batt1, 0.0f, 0.0f, 0.0f);
-}
+float maxVoltage[2] = {0.0f, 0.0f};
 
 // Charge state logic
 CHARGESTATE state1 = DISCONNECTED;
@@ -19,6 +13,7 @@ CHARGESTATE state2 = DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
 void SetChargeState(CHARGESTATE newState, bool batt1) {
+  filterReset(batt1);
   if (batt1) {
     state1 = newState;
     stateSetTime1 = HAL_GetTick();
@@ -36,11 +31,32 @@ uint32_t GetChargeStateTime(bool batt1) {
 }
 
 // Utilities
-float batteryVoltage(bool batt1) {
+float batt1h = 0.0f;
+float batt2h = 0.0f;
+float batt1l = 0.0f;
+float batt2l = 0.0f;
+void filterReset(bool batt1) {
   if (batt1) {
-    return SCALE_ANALOG(batt_adc[0]) - SCALE_ANALOG(batt_adc[2]);
+    batt1h = SCALE_ANALOG(batt_adc[0]);
+    batt1l = SCALE_ANALOG(batt_adc[2]);
   } else {
-    return SCALE_ANALOG(batt_adc[1]) - SCALE_ANALOG(batt_adc[3]);
+    batt2h = SCALE_ANALOG(batt_adc[1]);
+    batt2l = SCALE_ANALOG(batt_adc[3]);
+  }
+}
+float batteryVoltage(bool batt1) {
+  // Update filters
+  if (batt1) {
+    batt1h = batt1h * 0.9f + SCALE_ANALOG(batt_adc[0]) * 0.1f;
+    batt1l = batt1l * 0.9f + SCALE_ANALOG(batt_adc[2]) * 0.1f;
+  } else {
+    batt2h = batt2h * 0.9f + SCALE_ANALOG(batt_adc[1]) * 0.1f;
+    batt2l = batt2l * 0.9f + SCALE_ANALOG(batt_adc[3]) * 0.1f;
+  }
+  if (batt1) {
+    return (batt1h - batt1l);
+  } else {
+    return (batt2h - batt2l);
   }
 }
 
@@ -70,7 +86,6 @@ void fsm_DISCONNECTED(bool batt1) {
   }
 }
 
-float maxVoltage[2] = {0.0f, 0.0f};
 void fsm_CHARGE(bool batt1) {
   // Writes
   WriteCurrent(batt1, 2.0f);
@@ -139,7 +154,6 @@ void fsm_CHARGE_DONE(bool batt1) {
   ssd1306_UpdateScreen();
 
   // Read battery voltage
-  float voltage = batteryVoltage(batt1);
   if (voltage > 15.0f) {  // Battery connected
     SetChargeState(DISCONNECTED, batt1);
   }

@@ -225,13 +225,6 @@ int main(void) {
     }
   }
 
-  // Initialize filters
-  float batt1h = SCALE_ANALOG(batt_adc[0]);
-  float batt2h = SCALE_ANALOG(batt_adc[1]);
-  float batt1l = SCALE_ANALOG(batt_adc[2]);
-  float batt2l = SCALE_ANALOG(batt_adc[3]);
-  float vbus = SCALE_ANALOG(batt_adc[4]);
-
   // Clear
   ssd1306_Display(true);
   ssd1306_Fill(Black);
