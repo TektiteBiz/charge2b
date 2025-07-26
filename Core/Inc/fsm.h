@@ -2,7 +2,6 @@
 #define __FSM_H
 
 #include "main.h"
-extern uint16_t batt_adc[5];
 
 typedef enum CHARGESTATE {
   DISCONNECTED,
@@ -18,5 +17,6 @@ typedef enum CHARGESTATE {
 void SetChargeState(CHARGESTATE newState, bool batt1);
 uint32_t GetChargeStateTime(bool batt1);
 void fsm_Run(bool batt1);
+void filterReset(bool batt1);
 
 #endif /* __FSM_H */

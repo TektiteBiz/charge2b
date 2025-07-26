@@ -1,8 +1,9 @@
 #MicroXplorer Configuration settings - do not modify
-ADC.ContinuousConvMode=ENABLE
+ADC.ContinuousConvMode=DISABLE
 ADC.DMAContinuousRequests=ENABLE
-ADC.IPParameters=ContinuousConvMode,ScanConvMode,DMAContinuousRequests,SamplingTime
-ADC.SamplingTime=ADC_SAMPLETIME_239CYCLES_5
+ADC.EOCSelection=ADC_EOC_SEQ_CONV
+ADC.IPParameters=ContinuousConvMode,ScanConvMode,DMAContinuousRequests,SamplingTime,EOCSelection
+ADC.SamplingTime=ADC_SAMPLETIME_7CYCLES_5
 ADC.ScanConvMode=ADC_SCAN_DIRECTION_FORWARD
 CAD.formats=
 CAD.pinconfig=
@@ -11,7 +12,7 @@ Dma.ADC.0.Direction=DMA_PERIPH_TO_MEMORY
 Dma.ADC.0.Instance=DMA1_Channel1
 Dma.ADC.0.MemDataAlignment=DMA_MDATAALIGN_HALFWORD
 Dma.ADC.0.MemInc=DMA_MINC_ENABLE
-Dma.ADC.0.Mode=DMA_CIRCULAR
+Dma.ADC.0.Mode=DMA_NORMAL
 Dma.ADC.0.PeriphDataAlignment=DMA_PDATAALIGN_HALFWORD
 Dma.ADC.0.PeriphInc=DMA_PINC_DISABLE
 Dma.ADC.0.Priority=DMA_PRIORITY_MEDIUM

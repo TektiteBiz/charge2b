@@ -155,7 +155,10 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
   // Start ADC
-  HAL_ADC_Start_DMA(&hadc, (uint32_t *)batt_adc, 5);
+  if (HAL_ADCEx_Calibration_Start(&hadc) != HAL_OK) {
+    Error_Handler();
+  }
+  __enable_irq();
 
   // Display
   LEDWrite(true, 0.0f, 0.0f, 0.08f);
@@ -240,6 +243,8 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  filterReset(true);
+  filterReset(false);
   while (1) {
     /* USER CODE END WHILE */
 
@@ -340,10 +345,10 @@ static void MX_ADC_Init(void) {
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
-  hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = ENABLE;
+  hadc.Init.ContinuousConvMode = DISABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
@@ -357,7 +362,7 @@ static void MX_ADC_Init(void) {
    */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }
