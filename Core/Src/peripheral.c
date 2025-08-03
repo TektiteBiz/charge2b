@@ -566,8 +566,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   (void)hadc;
   adcReady = true;
 }
-// Takes 3ms
+// Takes 13ms
 void UpdateADC() {
+  // uint32_t start = HAL_GetTick();
   uint32_t sums[6] = {0};
   for (int i = 0; i < 100; i++) {
     adcReady = false;
@@ -582,6 +583,7 @@ void UpdateADC() {
   for (int ch = 0; ch < 6; ch++) {
     batt_adc[ch] = sums[ch] / 100;
   }
+  // printf("ADC update took %lu ms\n", HAL_GetTick() - start);
 }
 float BatteryVoltage(bool chan1) {
   return batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
@@ -590,6 +592,16 @@ float BatteryCurrent(bool chan1) {
   return batt_adc[chan1 ? 2 : 3] * CURRENT_SCALE;
 }
 float VBUSVoltage() { return batt_adc[4] * ANALOG_SCALE_VBUS; }
+
+#define TS_CAL1 (*(uint16_t*)0x1FFFF7B8)  // ADC reading at 30°C
+#define TS_CAL2 (*(uint16_t*)0x1FFFF7C2)  // ADC reading at 110°C
+#define TEMP30 30.0f
+#define TEMP110 110.0f
+
 float TempCelsius() {  // TODO: Why is this not working
-  return __LL_ADC_CALC_TEMPERATURE(3300, batt_adc[5], LL_ADC_RESOLUTION_12B);
+  float adc_raw = (float)batt_adc[5];
+  float temperature = ((adc_raw - (float)TS_CAL1)) * (TEMP110 - TEMP30) /
+                          ((float)TS_CAL2 - (float)TS_CAL1) +
+                      TEMP30;
+  return temperature;  // in °C
 }

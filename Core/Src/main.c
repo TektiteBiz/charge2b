@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "control.h"
 #include "fsm.h"
 #include "peripheral.h"
 #include "ssd1306.h"
@@ -258,7 +259,11 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  float voltage = 12.0f;
+  ResetCurrent(true, 2.0f);
+  ResetCurrent(false, 2.0f);
+  uint32_t prevTime = HAL_GetTick();
+  uint32_t en1 = 0;
+  uint32_t en2 = 0;
   while (1) {
     /* USER CODE END WHILE */
 
@@ -267,17 +272,49 @@ int main(void) {
     HAL_Delay(50);
     fsm_Run(false);
     HAL_Delay(50);*/
-    WriteVoltage(true, voltage);
-    WriteVoltage(false, voltage);
-
     UpdateADC();
+
+    float dT = (HAL_GetTick() - prevTime) / 1000.0f;  // Convert to seconds
+    prevTime = HAL_GetTick();
+
+    if (en1 != 0) {
+      ControlUpdate(true, dT);
+      if (BatteryCurrent(true) < 0.1f && HAL_GetTick() - en1 > 5000) {
+        ResetCurrent(true, 2.0f);
+        en1 = 0;
+        EnableReg(true, false);
+      }
+    } else {
+      if (BatteryVoltage(true) > 11.0f) {
+        en1 = HAL_GetTick();
+        EnableReg(true, true);
+        ResetCurrent(true, 2.0f);
+      }
+    }
+    HAL_Delay(50);
+
+    if (en2 != 0) {
+      ControlUpdate(false, dT);
+      if (BatteryCurrent(false) < 0.1f && HAL_GetTick() - en2 > 5000) {
+        ResetCurrent(false, 2.0f);
+        en2 = 0;
+        EnableReg(false, false);
+      }
+    } else {
+      if (BatteryVoltage(false) > 11.0f) {
+        en2 = HAL_GetTick();
+        EnableReg(false, true);
+        ResetCurrent(false, 2.0f);
+      }
+    }
+    HAL_Delay(50);
+
     printf("Batt1 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(true),
            BatteryCurrent(true));
     printf("Batt2 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(false),
            BatteryCurrent(false));
     printf("VBUS Voltage: %.2f V\n", VBUSVoltage());
     printf("Temperature: %.2f °C\n\n\n\n", TempCelsius());
-    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -387,7 +424,7 @@ static void MX_ADC_Init(void) {
    */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-  sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }
