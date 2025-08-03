@@ -559,7 +559,7 @@ const float ANALOG_SCALE = (3.3f / 4095.0f) * ((20000.0f + 5100.0f) / 5100.0f);
 const float ANALOG_SCALE_VBUS =
     (3.3f / 4095.0f) * ((20000.0f + 3300.0f) / 3300.0f);
 const float CURRENT_SCALE = (3.3f / 4095.0f) / (30.0f / 1000.0f * 50.0f);
-uint16_t batt_adc[7] = {0, 0, 0, 0, 0, 0, 0};  // 5 channels + temp + vrefint
+uint16_t batt_adc[6] = {0, 0, 0, 0, 0, 0};  // 5 channels + temp
 bool adcReady = false;
 extern ADC_HandleTypeDef hadc;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -568,18 +568,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 // Takes 3ms
 void UpdateADC() {
-  uint32_t sums[7] = {0};
+  uint32_t sums[6] = {0};
   for (int i = 0; i < 100; i++) {
     adcReady = false;
-    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 7);
+    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 6);
     while (!adcReady) {
       __NOP();
     }
-    for (int ch = 0; ch < 7; ch++) {
+    for (int ch = 0; ch < 6; ch++) {
       sums[ch] += batt_adc[ch];
     }
   }
-  for (int ch = 0; ch < 7; ch++) {
+  for (int ch = 0; ch < 6; ch++) {
     batt_adc[ch] = sums[ch] / 100;
   }
 }
@@ -590,6 +590,6 @@ float BatteryCurrent(bool chan1) {
   return batt_adc[chan1 ? 2 : 3] * CURRENT_SCALE;
 }
 float VBUSVoltage() { return batt_adc[4] * ANALOG_SCALE_VBUS; }
-float TempCelsius() {
+float TempCelsius() {  // TODO: Why is this not working
   return __LL_ADC_CALC_TEMPERATURE(3300, batt_adc[5], LL_ADC_RESOLUTION_12B);
 }
