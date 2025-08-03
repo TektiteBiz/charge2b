@@ -14,7 +14,7 @@ HAL_StatusTypeDef USB_NegotiatedPDO(bool* result);
 HAL_StatusTypeDef USB_WriteNVMFromPDOs();
 HAL_StatusTypeDef USB_WritePDO(uint8_t pdo_num, float voltage, float current);
 HAL_StatusTypeDef USB_WriteDefaultNVM();
-void WriteCurrent(bool chan1, float current);
+void EnableReg(bool chan1, bool en);
 
 // Value for scaling 12-bit analog value to input voltage, where R1 is 2kohm and
 // R2 is 330ohm

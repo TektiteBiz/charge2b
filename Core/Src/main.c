@@ -143,8 +143,8 @@ int main(void) {
   // Start DAC
   HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
-  WriteCurrent(true, 0.0f);
-  WriteCurrent(false, 0.0f);
+  EnableReg(true, false);  // Disable regs
+  EnableReg(false, false);
 
   // Start LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -249,10 +249,12 @@ int main(void) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    fsm_Run(true);
+    /*fsm_Run(true);
     HAL_Delay(50);
     fsm_Run(false);
-    HAL_Delay(50);
+    HAL_Delay(50);*/
+    printf("Hello, World!\n");
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
