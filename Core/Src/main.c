@@ -81,6 +81,7 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int _write(int file, char *ptr, int len) {
+  (void)file;  // Unused parameter
   HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
   return len;
 }
@@ -257,8 +258,7 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  filterReset(true);
-  filterReset(false);
+  float voltage = 12.0f;
   while (1) {
     /* USER CODE END WHILE */
 
@@ -267,7 +267,16 @@ int main(void) {
     HAL_Delay(50);
     fsm_Run(false);
     HAL_Delay(50);*/
-    printf("Hello, World!\n");
+    WriteVoltage(true, voltage);
+    WriteVoltage(false, voltage);
+
+    UpdateADC();
+    printf("Batt1 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(true),
+           BatteryCurrent(true));
+    printf("Batt2 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(false),
+           BatteryCurrent(false));
+    printf("VBUS Voltage: %.2f V\n", VBUSVoltage());
+    printf("Temperature: %.2f °C\n\n\n\n", TempCelsius());
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -414,6 +423,13 @@ static void MX_ADC_Init(void) {
   /** Configure for the selected ADC regular channel to be converted.
    */
   sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel to be converted.
+   */
+  sConfig.Channel = ADC_CHANNEL_VREFINT;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }

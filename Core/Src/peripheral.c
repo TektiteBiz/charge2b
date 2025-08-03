@@ -1,5 +1,6 @@
 #include "peripheral.h"
 
+#include "stm32f0xx_ll_adc.h"
 #include "stusb_registers.h"
 
 extern TIM_HandleTypeDef htim1;
@@ -529,4 +530,66 @@ void EnableReg(bool chan1, bool en) {
                       en ? GPIO_PIN_SET : GPIO_PIN_RESET);
   }
 }
-const float ANALOG_SCALE = (3.3f / 4095.0f) * ((20000.0f + 3300.0f) / 3300.0f);
+
+// Equation is inverse of (1) in https://www.ti.com/lit/an/slyt777/slyt777.pdf
+#define REG_R1 100000.0f
+#define REG_R2 8200.0f
+#define REG_R3 47000.0f
+#define REG_VFB 1.0f
+const float REG_OFF = REG_VFB * (1 + REG_R1 / REG_R2 + REG_R1 / REG_R3);
+const float REG_SCALE = REG_R3 / REG_R1 * (4095.0f / 3.3f);
+void WriteVoltage(bool chan1, float voltage) {
+  if (voltage < 8.5f || voltage > 15.0f) {
+    // Voltage out of range, disable regulator
+    EnableReg(chan1, false);
+    return;
+  }
+  EnableReg(chan1, true);
+
+  // Calculate DAC value
+  float dacValue = (REG_OFF - voltage) * REG_SCALE;
+
+  // Apply
+  HAL_DAC_SetValue(&hdac, chan1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2,
+                   DAC_ALIGN_12B_R, (uint32_t)dacValue);
+}
+
+// ADC
+const float ANALOG_SCALE = (3.3f / 4095.0f) * ((20000.0f + 5100.0f) / 5100.0f);
+const float ANALOG_SCALE_VBUS =
+    (3.3f / 4095.0f) * ((20000.0f + 3300.0f) / 3300.0f);
+const float CURRENT_SCALE = (3.3f / 4095.0f) / (30.0f / 1000.0f * 50.0f);
+uint16_t batt_adc[7] = {0, 0, 0, 0, 0, 0, 0};  // 5 channels + temp + vrefint
+bool adcReady = false;
+extern ADC_HandleTypeDef hadc;
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+  (void)hadc;
+  adcReady = true;
+}
+// Takes 3ms
+void UpdateADC() {
+  uint32_t sums[7] = {0};
+  for (int i = 0; i < 100; i++) {
+    adcReady = false;
+    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 7);
+    while (!adcReady) {
+      __NOP();
+    }
+    for (int ch = 0; ch < 7; ch++) {
+      sums[ch] += batt_adc[ch];
+    }
+  }
+  for (int ch = 0; ch < 7; ch++) {
+    batt_adc[ch] = sums[ch] / 100;
+  }
+}
+float BatteryVoltage(bool chan1) {
+  return batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
+}
+float BatteryCurrent(bool chan1) {
+  return batt_adc[chan1 ? 2 : 3] * CURRENT_SCALE;
+}
+float VBUSVoltage() { return batt_adc[4] * ANALOG_SCALE_VBUS; }
+float TempCelsius() {
+  return __LL_ADC_CALC_TEMPERATURE(3300, batt_adc[5], LL_ADC_RESOLUTION_12B);
+}

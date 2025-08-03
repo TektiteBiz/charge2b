@@ -4,29 +4,6 @@
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 
-uint16_t batt_adc[6] = {0, 0, 0, 0, 0, 0};
-bool adcReady = false;
-extern ADC_HandleTypeDef hadc;
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) { adcReady = true; }
-void readAdc() {
-  uint32_t start = HAL_GetTick();
-  uint32_t sums[6] = {0};
-  for (int i = 0; i < 200; i++) {
-    adcReady = false;
-    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 6);
-    while (!adcReady) {
-      __NOP();
-    }
-    for (int ch = 0; ch < 6; ch++) {
-      sums[ch] += batt_adc[ch];
-    }
-  }
-  for (int ch = 0; ch < 6; ch++) {
-    batt_adc[ch] = sums[ch] / 200;
-  }
-  uint32_t diff = HAL_GetTick() - start;
-}
-
 float maxVoltage[2] = {0.0f, 0.0f};
 
 // Charge state logic
@@ -35,7 +12,6 @@ CHARGESTATE state2 = DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
 void SetChargeState(CHARGESTATE newState, bool batt1) {
-  filterReset(batt1);
   if (batt1) {
     state1 = newState;
     stateSetTime1 = HAL_GetTick();
@@ -51,47 +27,6 @@ uint32_t GetChargeStateTime(bool batt1) {
     return HAL_GetTick() - stateSetTime2;
   }
 }
-
-// Utilities
-float batt1h = 0.0f;
-float batt2h = 0.0f;
-float batt1l = 0.0f;
-float batt2l = 0.0f;
-void filterReset(bool batt1) {
-  readAdc();
-  if (batt1) {
-    batt1h = SCALE_ANALOG(batt_adc[0]);
-    batt1l = SCALE_ANALOG(batt_adc[2]);
-  } else {
-    batt2h = SCALE_ANALOG(batt_adc[1]);
-    batt2l = SCALE_ANALOG(batt_adc[3]);
-  }
-}
-float batteryVoltage(bool batt1) {
-  readAdc();
-  // Update filters
-  if (batt1) {
-    // If >3V difference, reset filter
-    if (fabsf(batt1l - SCALE_ANALOG(batt_adc[2])) > 3.0f) {
-      filterReset(batt1);
-    }
-    batt1h = batt1h * 0.9f + SCALE_ANALOG(batt_adc[0]) * 0.1f;
-    batt1l = batt1l * 0.9f + SCALE_ANALOG(batt_adc[2]) * 0.1f;
-  } else {
-    // If >3V difference, reset filter
-    if (fabsf(batt2l - SCALE_ANALOG(batt_adc[3])) > 3.0f) {
-      filterReset(batt1);
-    }
-    batt2h = batt2h * 0.9f + SCALE_ANALOG(batt_adc[1]) * 0.1f;
-    batt2l = batt2l * 0.9f + SCALE_ANALOG(batt_adc[3]) * 0.1f;
-  }
-  if (batt1) {
-    return (batt1h - batt1l);
-  } else {
-    return (batt2h - batt2l);
-  }
-}
-
 // Handlers
 void fsm_DISCONNECTED(bool batt1) {
   // Writes
@@ -166,11 +101,6 @@ void fsm_CHARGE(bool batt1) {
     if (voltage > 15.0f) {  // Disconnected
       SetChargeState(DISCONNECTED, batt1);
     }
-  }
-  if (!batt1) {
-    printf("voltage:%f,maxVoltage:%f,rawVoltage:%f\n", voltage,
-           maxVoltage[batt1 ? 0 : 1],
-           SCALE_ANALOG(batt_adc[1]) - SCALE_ANALOG(batt_adc[3]));
   }
 
   // TODO: Safety features
