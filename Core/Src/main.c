@@ -210,10 +210,24 @@ int main(void) {
   }
 
   bool negotiated = false;
-  while (!negotiated) {
+  int timeout_count = 0;
+  const int max_timeout = 20;  // 5 seconds (20 * 250ms)
+
+  while (!negotiated && timeout_count < max_timeout) {
     USB_NegotiatedPDO(&negotiated);
     printf("Negotiated PDO: %d\n", negotiated);
     HAL_Delay(250);
+    timeout_count++;
+  }
+
+  if (!negotiated) {
+    printf("PD negotiation timeout - no PD source detected\n");
+    LEDWrite(true, 0.1f, 0.0f, 0.0f);  // Red LEDs for error
+    LEDWrite(false, 0.1f, 0.0f, 0.0f);
+    DisplayLoadingText("NO PD SOURCE");
+    while (1) {
+      HAL_Delay(1000);
+    }
   }
 
   bool active;
