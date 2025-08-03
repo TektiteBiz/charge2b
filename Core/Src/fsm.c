@@ -121,7 +121,7 @@ void fsm_DISCONNECTED(bool batt1) {
 void fsm_CHARGE(bool batt1) {
   // Writes
   // WriteCurrent(batt1, 2.0f);
-  LEDWrite(batt1, 0.1f, 0.0f, 0.0f);
+  LEDWrite(batt1, 0.2f, 0.0f, 0.0f);
 
   // Display battery charging on ssd1306
   ssd1306_Display(batt1);
@@ -179,7 +179,7 @@ void fsm_CHARGE(bool batt1) {
 void fsm_CHARGE_DONE(bool batt1) {
   // Writes
   // WriteCurrent(batt1, 0.0f);
-  LEDWrite(batt1, 0.0f, 0.1f, 0.0f);
+  LEDWrite(batt1, 0.0f, 0.2f, 0.0f);
 
   // Display battery charged on ssd1306
   ssd1306_Display(batt1);
@@ -218,7 +218,7 @@ void fsm_Run(bool batt1) {
       // Handle other states if needed
       printf("Unknown state: %d\n", batt1 ? state1 : state2);
       // WriteCurrent(batt1, 0.0f);
-      LEDWrite(batt1, 0.0f, 0.0f, 0.1f);
+      LEDWrite(batt1, 0.0f, 0.0f, 0.2f);
       break;
   }
 }
