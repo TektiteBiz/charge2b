@@ -266,59 +266,32 @@ int main(void) {
   uint32_t en1 = 0;
   uint32_t en2 = 0;
   uint32_t lastRender = HAL_GetTick();
+  bool rendered2 = false;
   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    /*fsm_Run(true);
-    HAL_Delay(50);
-    fsm_Run(false);
-    HAL_Delay(50);*/
     UpdateADC();
 
     float dT = (HAL_GetTick() - prevTime) / 1000.0f;  // Convert to seconds
     prevTime = HAL_GetTick();
 
-    if (en1 != 0) {
-      ControlUpdate(true, dT);
-      if (BatteryCurrent(true) < 0.1f && HAL_GetTick() - en1 > 5000) {
-        ResetCurrent(true, curr);
-        en1 = 0;
-        EnableReg(true, false);
-      }
-    } else {
-      if (BatteryVoltage(true) > 11.0f) {
-        en1 = HAL_GetTick();
-        EnableReg(true, true);
-        ResetCurrent(true, curr);
-      }
-    }
+    // FSM
+    fsm_Run(true, dT);
+    HAL_Delay(5);
+    fsm_Run(false, dT);
     HAL_Delay(5);
 
-    if (en2 != 0) {
-      ControlUpdate(false, dT);
-      if (BatteryCurrent(false) < 0.1f && HAL_GetTick() - en2 > 5000) {
-        ResetCurrent(false, curr);
-        en2 = 0;
-        EnableReg(false, false);
-      }
-    } else {
-      if (BatteryVoltage(false) > 11.0f) {
-        en2 = HAL_GetTick();
-        EnableReg(false, true);
-        ResetCurrent(false, curr);
-      }
-    }
-    HAL_Delay(5);
-
-    if (HAL_GetTick() - lastRender > 250) {
+    // Render
+    if (HAL_GetTick() - lastRender > 100) {
+      fsm_Render(true);
       lastRender = HAL_GetTick();
-      printf("Batt1 Voltage: %.1f V, Current: %.1f A\n", BatteryVoltage(true),
-             BatteryCurrent(true));
-      printf("Batt2 Voltage: %.1f V, Current: %.1f A\n", BatteryVoltage(false),
-             BatteryCurrent(false));
-      printf("VBUS Voltage: %.2f V\n", VBUSVoltage());
-      printf("Temperature: %.2f °C\n\n\n\n", TempCelsius());
+      rendered2 = false;
+    }
+    // Render second display 180deg out of phase
+    if (HAL_GetTick() - lastRender > 50 && !rendered2) {
+      fsm_Render(false);
+      rendered2 = true;
     }
   }
   /* USER CODE END 3 */
