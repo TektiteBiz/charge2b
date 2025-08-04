@@ -340,13 +340,12 @@ void fsm_Render(bool batt1) {
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
     case CS_TOPUP:
-      ssd1306_PrintLine(1, "Charging Complete");
-      ssd1306_PrintLine(2, "Trickle Charging");
-      ssd1306_PrintLine(3, "Voltage: %.1fV", BatteryVoltage(batt1));
-      ssd1306_PrintLine(4, "Current: %.1fA", BatteryCurrent(batt1));
-      ssd1306_PrintLine(5, "Power: %.1fW",
+      ssd1306_PrintLine(1, "Trickle Charging");
+      ssd1306_PrintLine(2, "Voltage: %.1fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(3, "Current: %.2fA", BatteryCurrent(batt1));
+      ssd1306_PrintLine(4, "Power: %.2fW",
                         BatteryVoltage(batt1) * BatteryCurrent(batt1));
-      ssd1306_PrintLine(6, "Time: %02lu:%02lu",
+      ssd1306_PrintLine(5, "Time: %02lu:%02lu",
                         GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
