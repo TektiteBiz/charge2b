@@ -1,6 +1,7 @@
 #include "fsm.h"
 
 #include "control.h"
+#include "eeprom.h"
 #include "peripheral.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
@@ -21,8 +22,8 @@ CHARGESTATE state1 = CS_DISCONNECTED;
 CHARGESTATE state2 = CS_DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
-int chargeMode1 = 0;
-int chargeMode2 = 0;
+uint16_t chargeMode1 = 0;
+uint16_t chargeMode2 = 0;
 void SetChargeState(CHARGESTATE newState, bool batt1) {
   if (batt1) {
     state1 = newState;
@@ -40,11 +41,29 @@ uint32_t GetChargeStateTime(bool batt1) {
   }
 }
 int getChargeMode(bool batt1) { return batt1 ? chargeMode1 : chargeMode2; }
+void InitFSM() {
+  EE_Init(EE_CONDITIONAL_ERASE);
+  if (EE_ReadVariable16bits(0, &chargeMode1) != EE_OK) {
+    chargeMode1 = 0;  // Default to slow mode
+    EE_WriteVariable16bits(0, chargeMode1);
+  }
+  if (EE_ReadVariable16bits(1, &chargeMode2) != EE_OK) {
+    chargeMode2 = 0;  // Default to slow mode
+    EE_WriteVariable16bits(1, chargeMode2);
+  }
+  printf("Charge mode 1: %d, Charge mode 2: %d\n", chargeMode1, chargeMode2);
+}
 void setChargeMode(int mode, bool batt1) {
+  EE_Status status = EE_OK;
   if (batt1) {
     chargeMode1 = mode;
+    status = EE_WriteVariable16bits(0, chargeMode1);
   } else {
     chargeMode2 = mode;
+    status = EE_WriteVariable16bits(1, chargeMode2);
+  }
+  if (status == EE_CLEANUP_REQUIRED) {
+    EE_CleanUp();
   }
 }
 CHARGE_ERROR chargeError1 = CHARGE_NONE;
