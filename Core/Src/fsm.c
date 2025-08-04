@@ -5,12 +5,20 @@
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 
+// Definitions
+#define CHARGE_MODE_COUNT 4
+const char* CHARGE_MODES[CHARGE_MODE_COUNT] = {"Slow", "Normal", "Fast",
+                                               "Turbo"};
+const float CHARGE_CURRENT[CHARGE_MODE_COUNT] = {0.8f, 1.2f, 1.6f, 2.0f};
+const float TOPUP_CURRENT = 0.07f;
+const float PRECHARGE_CURRENT = 0.2f;
+
 float maxVoltage1 = 0.0f;
 float maxVoltage2 = 0.0f;
 
 // Charge state logic
-CHARGESTATE state1 = DISCONNECTED;
-CHARGESTATE state2 = DISCONNECTED;
+CHARGESTATE state1 = CS_DISCONNECTED;
+CHARGESTATE state2 = CS_DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
 int chargeMode1 = 0;
@@ -39,8 +47,8 @@ void setChargeMode(int mode, bool batt1) {
     chargeMode2 = mode;
   }
 }
-CHARGE_ERROR chargeError1 = NONE;
-CHARGE_ERROR chargeError2 = NONE;
+CHARGE_ERROR chargeError1 = CHARGE_NONE;
+CHARGE_ERROR chargeError2 = CHARGE_NONE;
 void setChargeError(CHARGE_ERROR error, bool batt1) {
   if (batt1) {
     chargeError1 = error;
@@ -59,13 +67,13 @@ void fsm_DISCONNECTED(bool batt1) {
   // Writes
   LEDWrite(batt1, 0.0f, 0.0f, 0.0f);
   EnableReg(batt1, false);
-  setChargeError(NONE, batt1);
+  setChargeError(CHARGE_NONE, batt1);
 
   // Check if battery is connected
-  float voltage = batteryVoltage(batt1);
+  float voltage = BatteryVoltage(batt1);
   if (voltage >= 8.5f &&
       GetChargeStateTime(batt1) > 1000) {  // Battery connected
-    SetChargeState(CHARGE, batt1);
+    SetChargeState(CS_CHARGE, batt1);
   }
 
   // Handle mode button press, switch modes
@@ -116,7 +124,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   if (BatteryVoltage(batt1) < 10.0f) {
     // Precharge needed
     ResetCurrent(batt1, PRECHARGE_CURRENT);
-    SetChargeState(PRECHARGE, batt1);
+    SetChargeState(CS_PRECHARGE, batt1);
     return;
   }
 
@@ -149,7 +157,7 @@ void fsm_CHARGE(bool batt1, float dT) {
     if (HAL_GetTick() - voltageDropTime > 2000) {
       // Go to top-up phase
       ResetCurrent(batt1, TOPUP_CURRENT);
-      SetChargeState(TOPUP, batt1);
+      SetChargeState(CS_TOPUP, batt1);
       return;
     }
   }
@@ -157,7 +165,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   // Check if battery disconnected
   if (BatteryCurrent(batt1) < 0.1f) {
     // Battery disconnected
-    SetChargeState(DISCONNECTED, batt1);
+    SetChargeState(CS_DISCONNECTED, batt1);
     return;
   }
 
@@ -165,7 +173,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   if (BatteryVoltage(batt1) > 14.9f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
-    SetChargeState(ERROR, batt1);
+    SetChargeState(CS_ERROR, batt1);
     return;
   }
 
@@ -176,7 +184,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   // by 60 twice to convert hours to seconds
   if (GetChargeStateTime(batt1) > tauMax) {
     setChargeError(CHARGE_OVERTIME, batt1);
-    SetChargeState(ERROR, batt1);
+    SetChargeState(CS_ERROR, batt1);
     return;
   }
 }
@@ -193,7 +201,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   // Check if battery disconnected
   if (BatteryCurrent(batt1) < 0.03f) {
     // Battery disconnected
-    SetChargeState(DISCONNECTED, batt1);
+    SetChargeState(CS_DISCONNECTED, batt1);
     return;
   }
 
@@ -201,13 +209,13 @@ void fsm_TOPUP(bool batt1, float dT) {
   if (BatteryVoltage(batt1) > 14.9f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
-    SetChargeState(ERROR, batt1);
+    SetChargeState(CS_ERROR, batt1);
     return;
   }
 
   // Check if overtime (1 hour)
   if (GetChargeStateTime(batt1) > 60.0f * 60.0f) {
-    SetChargeState(DONE, batt1);
+    SetChargeState(CS_DONE, batt1);
     return;
   }
 }
@@ -216,10 +224,10 @@ void fsm_DONE(bool batt1) {
   // Writes
   LEDWrite(batt1, 0.0f, 0.2f, 0.0f);
   EnableReg(batt1, false);
-  setChargeError(NONE, batt1);
+  setChargeError(CHARGE_NONE, batt1);
   // Check if battery disconnected
   if (BatteryVoltage(batt1) < 8.5f) {  // Battery disconnected
-    SetChargeState(DISCONNECTED, batt1);
+    SetChargeState(CS_DISCONNECTED, batt1);
     return;
   }
 }
@@ -236,14 +244,14 @@ void fsm_PRECHARGE(bool batt1, float dT) {
   // Check if battery disconnected
   if (BatteryCurrent(batt1) < 0.1f) {
     // Battery disconnected
-    SetChargeState(DISCONNECTED, batt1);
+    SetChargeState(CS_DISCONNECTED, batt1);
     return;
   }
 
   // Check if done with precharge
   if (BatteryVoltage(batt1) > 10.5f) {
     ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
-    SetChargeState(CHARGE, batt1);
+    SetChargeState(CS_CHARGE, batt1);
     return;
   }
 
@@ -251,7 +259,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
   if (GetChargeStateTime(batt1) > 4.0f * 60.0f * 60.0f) {
     // Precharge overtime
     setChargeError(PRECHARGE_OVERTIME, batt1);
-    SetChargeState(ERROR, batt1);
+    SetChargeState(CS_ERROR, batt1);
     return;
   }
 }
@@ -267,7 +275,7 @@ void fsm_Error(bool batt1) {
 
   // Check if battery disconnected
   if (BatteryVoltage(batt1) < 8.5f) {  // Battery disconnected
-    SetChargeState(DISCONNECTED, batt1);
+    SetChargeState(CS_DISCONNECTED, batt1);
     return;
   }
 }
@@ -275,22 +283,22 @@ void fsm_Error(bool batt1) {
 // Main FSM function
 void fsm_Run(bool batt1, float dT) {
   switch (batt1 ? state1 : state2) {
-    case DISCONNECTED:
+    case CS_DISCONNECTED:
       fsm_DISCONNECTED(batt1);
       break;
-    case CHARGE:
+    case CS_CHARGE:
       fsm_CHARGE(batt1, dT);
       break;
-    case TOPUP:
+    case CS_TOPUP:
       fsm_TOPUP(batt1, dT);
       break;
-    case DONE:
+    case CS_DONE:
       fsm_DONE(batt1);
       break;
-    case PRECHARGE:
+    case CS_PRECHARGE:
       fsm_PRECHARGE(batt1, dT);
       break;
-    case ERROR:
+    case CS_ERROR:
       fsm_Error(batt1);
       break;
   }
@@ -298,7 +306,7 @@ void fsm_Run(bool batt1, float dT) {
 
 // UI
 #include <stdarg.h>
-void ssd1306_PrintLine(int row, const char *fmt, ...) {
+void ssd1306_PrintLine(int row, const char* fmt, ...) {
   char buf[32];
   va_list args;
   va_start(args, fmt);
@@ -316,10 +324,10 @@ void fsm_Render(bool batt1) {
   ssd1306_PrintLine(0, "Mode: %s - %.1fA", CHARGE_MODES[getChargeMode(batt1)],
                     CHARGE_CURRENT[getChargeMode(batt1)]);
   switch (batt1 ? state1 : state2) {
-    case DISCONNECTED:
+    case CS_DISCONNECTED:
       ssd1306_PrintLine(2, "Battery Disconnected");
       break;
-    case CHARGE:
+    case CS_CHARGE:
       ssd1306_PrintLine(2, "Battery Charging");
       float voltage = BatteryVoltage(batt1);
       float current = BatteryCurrent(batt1);
@@ -330,7 +338,7 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(6, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
-    case TOPUP:
+    case CS_TOPUP:
       ssd1306_PrintLine(2, "Charging Complete");
       ssd1306_PrintLine(3, "Trickle Charging");
       ssd1306_PrintLine(4, "Voltage: %.2fV", BatteryVoltage(batt1));
@@ -340,11 +348,11 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(7, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
-    case DONE:
+    case CS_DONE:
       ssd1306_PrintLine(2, "Charging Complete");
       ssd1306_PrintLine(3, "Voltage: %.2fV", BatteryVoltage(batt1));
       break;
-    case PRECHARGE:
+    case CS_PRECHARGE:
       ssd1306_PrintLine(2, "Precharging Battery");
       ssd1306_PrintLine(3, "Voltage: %.2fV", BatteryVoltage(batt1));
       ssd1306_PrintLine(4, "Current: %.2fA", BatteryCurrent(batt1));
@@ -353,10 +361,10 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(6, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
-    case ERROR:
+    case CS_ERROR:
       ssd1306_PrintLine(2, "ERROR");
       switch (getChargeError(batt1)) {
-        case NONE:
+        case CHARGE_NONE:
           ssd1306_PrintLine(3, "No Error");
           break;
         case CHARGE_OVERTIME:

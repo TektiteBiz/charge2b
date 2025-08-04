@@ -263,8 +263,6 @@ int main(void) {
   ResetCurrent(true, curr);
   ResetCurrent(false, curr);
   uint32_t prevTime = HAL_GetTick();
-  uint32_t en1 = 0;
-  uint32_t en2 = 0;
   uint32_t lastRender = HAL_GetTick();
   bool rendered2 = false;
   while (1) {
