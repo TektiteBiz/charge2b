@@ -129,7 +129,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Termination detection
-  if (GetChargeStateTime(batt1) < 1000) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
   float maxVolt = batt1 ? maxVoltage1 : maxVoltage2;
@@ -178,11 +178,11 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Check if overtime
-  float tauMax =
-      3.0f / CHARGE_CURRENT[getChargeMode(batt1)] * 1.25f * 60.0f *
-      60.0f;  // 3.0f comes from 3000mAh, 25% charge efficiency factor, multiply
+  float tauMax = 3.0f / CHARGE_CURRENT[getChargeMode(batt1)] * 1.25f * 60.0f *
+                 60.0f * 1000.0f;  // 3.0f comes from 3000mAh, 25% charge
+                                   // efficiency factor, multiply
   // by 60 twice to convert hours to seconds
-  if (GetChargeStateTime(batt1) > tauMax) {
+  if (GetChargeStateTime(batt1) > (uint32_t)tauMax) {
     setChargeError(CHARGE_OVERTIME, batt1);
     SetChargeState(CS_ERROR, batt1);
     return;
@@ -194,7 +194,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   LEDWrite(batt1, 0.0f, 0.2f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 1000) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
 
@@ -214,7 +214,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 
   // Check if overtime (1 hour)
-  if (GetChargeStateTime(batt1) > 60.0f * 60.0f) {
+  if (GetChargeStateTime(batt1) > 60.0f * 60.0f * 1000.0f) {
     SetChargeState(CS_DONE, batt1);
     return;
   }
@@ -237,7 +237,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
   LEDWrite(batt1, 0.2f, 0.0f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 1000) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
 
@@ -256,7 +256,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
   }
 
   // Check if overtime (4 hours)
-  if (GetChargeStateTime(batt1) > 4.0f * 60.0f * 60.0f) {
+  if (GetChargeStateTime(batt1) > 4.0f * 60.0f * 60.0f * 1000.0f) {
     // Precharge overtime
     setChargeError(PRECHARGE_OVERTIME, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -269,7 +269,7 @@ void fsm_Error(bool batt1) {
   LEDWrite(batt1, 0.15f, 0.15f, 0.0f);
   EnableReg(batt1, false);
 
-  if (GetChargeStateTime(batt1) < 1000) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
 
@@ -325,59 +325,62 @@ void fsm_Render(bool batt1) {
                     CHARGE_CURRENT[getChargeMode(batt1)]);
   switch (batt1 ? state1 : state2) {
     case CS_DISCONNECTED:
-      ssd1306_PrintLine(2, "Battery Disconnected");
+      ssd1306_PrintLine(1, "Battery Disconnected");
       break;
     case CS_CHARGE:
-      ssd1306_PrintLine(2, "Battery Charging");
+      ssd1306_PrintLine(1, "Battery Charging");
       float voltage = BatteryVoltage(batt1);
       float current = BatteryCurrent(batt1);
-      ssd1306_PrintLine(3, "Voltage: %.2fV", voltage);
-      ssd1306_PrintLine(4, "Current: %.2fA", current);
-      ssd1306_PrintLine(5, "Power: %.2fW",
+      ssd1306_PrintLine(2, "Voltage: %.1fV", voltage);
+      ssd1306_PrintLine(3, "Current: %.1fA", current);
+      ssd1306_PrintLine(4, "Power: %.1fW",
                         voltage * current);  // Power in Watts
-      ssd1306_PrintLine(6, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
+      ssd1306_PrintLine(5, "Time: %02lu:%02lu",
+                        GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
     case CS_TOPUP:
-      ssd1306_PrintLine(2, "Charging Complete");
-      ssd1306_PrintLine(3, "Trickle Charging");
-      ssd1306_PrintLine(4, "Voltage: %.2fV", BatteryVoltage(batt1));
-      ssd1306_PrintLine(5, "Current: %.2fA", BatteryCurrent(batt1));
-      ssd1306_PrintLine(6, "Power: %.2fW",
+      ssd1306_PrintLine(1, "Charging Complete");
+      ssd1306_PrintLine(2, "Trickle Charging");
+      ssd1306_PrintLine(3, "Voltage: %.1fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(4, "Current: %.1fA", BatteryCurrent(batt1));
+      ssd1306_PrintLine(5, "Power: %.1fW",
                         BatteryVoltage(batt1) * BatteryCurrent(batt1));
-      ssd1306_PrintLine(7, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
+      ssd1306_PrintLine(6, "Time: %02lu:%02lu",
+                        GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
     case CS_DONE:
-      ssd1306_PrintLine(2, "Charging Complete");
-      ssd1306_PrintLine(3, "Voltage: %.2fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(1, "Charging Complete");
+      ssd1306_PrintLine(2, "Voltage: %.1fV", BatteryVoltage(batt1));
       break;
     case CS_PRECHARGE:
-      ssd1306_PrintLine(2, "Precharging Battery");
-      ssd1306_PrintLine(3, "Voltage: %.2fV", BatteryVoltage(batt1));
-      ssd1306_PrintLine(4, "Current: %.2fA", BatteryCurrent(batt1));
-      ssd1306_PrintLine(5, "Power: %.2fW",
+      ssd1306_PrintLine(1, "Precharging Battery");
+      ssd1306_PrintLine(2, "Voltage: %.1fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(3, "Current: %.1fA", BatteryCurrent(batt1));
+      ssd1306_PrintLine(4, "Power: %.1fW",
                         BatteryVoltage(batt1) * BatteryCurrent(batt1));
-      ssd1306_PrintLine(6, "Time: %lu:%lu", GetChargeStateTime(batt1) / 60000,
+      ssd1306_PrintLine(5, "Time: %02lu:%02lu",
+                        GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
     case CS_ERROR:
-      ssd1306_PrintLine(2, "ERROR");
+      ssd1306_PrintLine(1, "Charging Error");
       switch (getChargeError(batt1)) {
         case CHARGE_NONE:
-          ssd1306_PrintLine(3, "No Error");
+          ssd1306_PrintLine(2, "No Error");
           break;
         case CHARGE_OVERTIME:
-          ssd1306_PrintLine(3, "Charge Overtime");
+          ssd1306_PrintLine(2, "Charge Overtime");
           break;
         case PRECHARGE_OVERTIME:
-          ssd1306_PrintLine(3, "Precharge Overtime");
+          ssd1306_PrintLine(2, "Precharge Overtime");
           break;
         case CHARGE_OVERVOLTAGE:
-          ssd1306_PrintLine(3, "Charge Overvoltage");
+          ssd1306_PrintLine(2, "Charge Overvoltage");
           break;
       }
-      ssd1306_PrintLine(4, "Voltage: %.2fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(3, "Voltage: %.1fV", BatteryVoltage(batt1));
       break;
   }
   ssd1306_UpdateScreen();
