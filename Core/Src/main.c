@@ -259,11 +259,13 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  ResetCurrent(true, 2.0f);
-  ResetCurrent(false, 2.0f);
+  float curr = 2.0f;
+  ResetCurrent(true, curr);
+  ResetCurrent(false, curr);
   uint32_t prevTime = HAL_GetTick();
   uint32_t en1 = 0;
   uint32_t en2 = 0;
+  uint32_t lastRender = HAL_GetTick();
   while (1) {
     /* USER CODE END WHILE */
 
@@ -280,7 +282,7 @@ int main(void) {
     if (en1 != 0) {
       ControlUpdate(true, dT);
       if (BatteryCurrent(true) < 0.1f && HAL_GetTick() - en1 > 5000) {
-        ResetCurrent(true, 2.0f);
+        ResetCurrent(true, curr);
         en1 = 0;
         EnableReg(true, false);
       }
@@ -288,15 +290,15 @@ int main(void) {
       if (BatteryVoltage(true) > 11.0f) {
         en1 = HAL_GetTick();
         EnableReg(true, true);
-        ResetCurrent(true, 2.0f);
+        ResetCurrent(true, curr);
       }
     }
-    HAL_Delay(50);
+    HAL_Delay(5);
 
     if (en2 != 0) {
       ControlUpdate(false, dT);
       if (BatteryCurrent(false) < 0.1f && HAL_GetTick() - en2 > 5000) {
-        ResetCurrent(false, 2.0f);
+        ResetCurrent(false, curr);
         en2 = 0;
         EnableReg(false, false);
       }
@@ -304,17 +306,20 @@ int main(void) {
       if (BatteryVoltage(false) > 11.0f) {
         en2 = HAL_GetTick();
         EnableReg(false, true);
-        ResetCurrent(false, 2.0f);
+        ResetCurrent(false, curr);
       }
     }
-    HAL_Delay(50);
+    HAL_Delay(5);
 
-    printf("Batt1 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(true),
-           BatteryCurrent(true));
-    printf("Batt2 Voltage: %.2f V, Current: %.2f A\n", BatteryVoltage(false),
-           BatteryCurrent(false));
-    printf("VBUS Voltage: %.2f V\n", VBUSVoltage());
-    printf("Temperature: %.2f °C\n\n\n\n", TempCelsius());
+    if (HAL_GetTick() - lastRender > 250) {
+      lastRender = HAL_GetTick();
+      printf("Batt1 Voltage: %.1f V, Current: %.1f A\n", BatteryVoltage(true),
+             BatteryCurrent(true));
+      printf("Batt2 Voltage: %.1f V, Current: %.1f A\n", BatteryVoltage(false),
+             BatteryCurrent(false));
+      printf("VBUS Voltage: %.2f V\n", VBUSVoltage());
+      printf("Temperature: %.2f °C\n\n\n\n", TempCelsius());
+    }
   }
   /* USER CODE END 3 */
 }
@@ -802,7 +807,7 @@ static void MX_GPIO_Init(void) {
   /*Configure GPIO pins : MODE2_Pin MODE1_Pin */
   GPIO_InitStruct.Pin = MODE2_Pin | MODE1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

@@ -1,5 +1,6 @@
 #include "fsm.h"
 
+#include "control.h"
 #include "peripheral.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
@@ -11,6 +12,8 @@ CHARGESTATE state1 = DISCONNECTED;
 CHARGESTATE state2 = DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
+int chargeMode1 = 0;
+int chargeMode2 = 0;
 void SetChargeState(CHARGESTATE newState, bool batt1) {
   if (batt1) {
     state1 = newState;
@@ -27,18 +30,24 @@ uint32_t GetChargeStateTime(bool batt1) {
     return HAL_GetTick() - stateSetTime2;
   }
 }
+int getChargeMode(bool batt1) { return batt1 ? chargeMode1 : chargeMode2; }
+void setChargeMode(int mode, bool batt1) {
+  if (batt1) {
+    chargeMode1 = mode;
+  } else {
+    chargeMode2 = mode;
+  }
+}
 // Handlers
+bool modePressed1 = false;
+bool modePressed2 = false;
 void fsm_DISCONNECTED(bool batt1) {
   // Writes
-  // WriteCurrent(batt1, 0.0f);
   LEDWrite(batt1, 0.0f, 0.0f, 0.0f);
+  EnableReg(batt1, false);
+  ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
 
-  // Display battery disconnected on ssd1306
-  ssd1306_Display(batt1);
-  ssd1306_Fill(Black);
-  ssd1306_SetCursor(0, 0);
-  ssd1306_WriteString("Battery Disconnected", Font_6x8, White);
-  ssd1306_UpdateScreen();
+  // Handle mode button press
 
   // Read battery voltage
   float voltage = batteryVoltage(batt1);
