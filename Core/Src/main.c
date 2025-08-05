@@ -166,9 +166,6 @@ int main(void) {
   LEDWrite(true, 0.0f, 0.0f, 0.2f);
   LEDWrite(false, 0.0f, 0.0f, 0.2f);
 
-  // Start EEPROM
-  InitFSM();
-
   ssd1306_Display(true);
   ssd1306_Init();
   ssd1306_DrawBitmap(0, 0, tektite_logo, 128, 52, White);

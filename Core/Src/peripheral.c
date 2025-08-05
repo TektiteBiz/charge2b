@@ -84,11 +84,11 @@ HAL_StatusTypeDef USB_ReadPDO(uint8_t pdo_num, float* voltage, float* current) {
 
   // Get voltage
   uint32_t v_data = (pdoData >> 10) & 0x3FF;
-  *voltage = ((float)v_data) / 20.0f;
+  *voltage = ((float)v_data) / 20.0;
 
   // Get current
   uint32_t c_data = pdoData & 0x3FF;
-  *current = ((float)c_data) * 0.01f;
+  *current = ((float)c_data) * 0.01;
 
   return status;
 }
