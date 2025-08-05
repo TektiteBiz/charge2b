@@ -435,6 +435,20 @@ static void MX_ADC_Init(void) {
 
   /** Configure for the selected ADC regular channel to be converted.
    */
+  sConfig.Channel = ADC_CHANNEL_7;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel to be converted.
+   */
+  sConfig.Channel = ADC_CHANNEL_8;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel to be converted.
+   */
   sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
@@ -762,6 +776,12 @@ static void MX_GPIO_Init(void) {
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, EN1_Pin | EN2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pins : PG1_Pin PG2_Pin */
+  GPIO_InitStruct.Pin = PG1_Pin | PG2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pins : EN1_Pin EN2_Pin */
   GPIO_InitStruct.Pin = EN1_Pin | EN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -772,7 +792,7 @@ static void MX_GPIO_Init(void) {
   /*Configure GPIO pin : ALERT_Pin */
   GPIO_InitStruct.Pin = ALERT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(ALERT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : MODE2_Pin MODE1_Pin */
