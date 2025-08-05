@@ -6,7 +6,7 @@
 **
 **  Author		: STM32CubeMX
 **
-**  Abstract    : Linker script for STM32F072RBTx series
+**  Abstract    : Linker script for STM32F072CBUx series
 **                128Kbytes FLASH and 16Kbytes RAM
 **
 **                Set heap size, stack size and stack location according

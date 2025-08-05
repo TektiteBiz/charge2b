@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
- ******************************************************************************
- * @file           : main.h
- * @brief          : Header for main.c file.
- *                   This file contains the common defines of the application.
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2025 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
+  ******************************************************************************
+  * @file           : main.h
+  * @brief          : Header for main.c file.
+  *                   This file contains the common defines of the application.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -31,10 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -49,7 +46,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-#define FLOAT_EQUALS(A, B) (fabsf((A) - (B)) < 0.00001f)
+
 /* USER CODE END EM */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -62,14 +59,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define PG1_Pin GPIO_PIN_0
-#define PG1_GPIO_Port GPIOC
-#define PG2_Pin GPIO_PIN_1
-#define PG2_GPIO_Port GPIOC
-#define EN1_Pin GPIO_PIN_2
-#define EN1_GPIO_Port GPIOC
-#define EN2_Pin GPIO_PIN_3
-#define EN2_GPIO_Port GPIOC
+#define MODE1_Pin GPIO_PIN_0
+#define MODE1_GPIO_Port GPIOF
+#define MODE2_Pin GPIO_PIN_1
+#define MODE2_GPIO_Port GPIOF
 #define BATT1_Pin GPIO_PIN_0
 #define BATT1_GPIO_Port GPIOA
 #define BATT2_Pin GPIO_PIN_1
@@ -80,32 +73,36 @@ void Error_Handler(void);
 #define CURR2_GPIO_Port GPIOA
 #define CTRL1_Pin GPIO_PIN_4
 #define CTRL1_GPIO_Port GPIOA
-#define CTRL2_Pin GPIO_PIN_5
-#define CTRL2_GPIO_Port GPIOA
+#define CTRL1A5_Pin GPIO_PIN_5
+#define CTRL1A5_GPIO_Port GPIOA
 #define THERM1_Pin GPIO_PIN_6
 #define THERM1_GPIO_Port GPIOA
 #define THERM2_Pin GPIO_PIN_7
 #define THERM2_GPIO_Port GPIOA
 #define VBUS_Pin GPIO_PIN_0
 #define VBUS_GPIO_Port GPIOB
-#define LED2B_Pin GPIO_PIN_6
-#define LED2B_GPIO_Port GPIOC
-#define LED2G_Pin GPIO_PIN_7
-#define LED2G_GPIO_Port GPIOC
-#define LED2R_Pin GPIO_PIN_8
-#define LED2R_GPIO_Port GPIOC
+#define ALERT_Pin GPIO_PIN_2
+#define ALERT_GPIO_Port GPIOB
+#define PG2_Pin GPIO_PIN_12
+#define PG2_GPIO_Port GPIOB
+#define EN2_Pin GPIO_PIN_13
+#define EN2_GPIO_Port GPIOB
+#define PG1_Pin GPIO_PIN_14
+#define PG1_GPIO_Port GPIOB
+#define EN1_Pin GPIO_PIN_15
+#define EN1_GPIO_Port GPIOB
 #define LED1B_Pin GPIO_PIN_8
 #define LED1B_GPIO_Port GPIOA
 #define LED1G_Pin GPIO_PIN_9
 #define LED1G_GPIO_Port GPIOA
 #define LED1R_Pin GPIO_PIN_10
 #define LED1R_GPIO_Port GPIOA
-#define ALERT_Pin GPIO_PIN_2
-#define ALERT_GPIO_Port GPIOD
-#define MODE2_Pin GPIO_PIN_3
-#define MODE2_GPIO_Port GPIOB
-#define MODE1_Pin GPIO_PIN_4
-#define MODE1_GPIO_Port GPIOB
+#define LED2B_Pin GPIO_PIN_3
+#define LED2B_GPIO_Port GPIOB
+#define LED2G_Pin GPIO_PIN_4
+#define LED2G_GPIO_Port GPIOB
+#define LED2R_Pin GPIO_PIN_5
+#define LED2R_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
