@@ -94,18 +94,18 @@ void Error_Handler(void);
 #define PG1_GPIO_Port GPIOB
 #define EN1_Pin GPIO_PIN_15
 #define EN1_GPIO_Port GPIOB
-#define LED1B_Pin GPIO_PIN_8
-#define LED1B_GPIO_Port GPIOA
-#define LED1G_Pin GPIO_PIN_9
-#define LED1G_GPIO_Port GPIOA
-#define LED1R_Pin GPIO_PIN_10
-#define LED1R_GPIO_Port GPIOA
-#define LED2B_Pin GPIO_PIN_3
-#define LED2B_GPIO_Port GPIOB
-#define LED2G_Pin GPIO_PIN_4
-#define LED2G_GPIO_Port GPIOB
-#define LED2R_Pin GPIO_PIN_5
-#define LED2R_GPIO_Port GPIOB
+#define LED2B_Pin GPIO_PIN_8
+#define LED2B_GPIO_Port GPIOA
+#define LED2G_Pin GPIO_PIN_9
+#define LED2G_GPIO_Port GPIOA
+#define LED2R_Pin GPIO_PIN_10
+#define LED2R_GPIO_Port GPIOA
+#define LED1B_Pin GPIO_PIN_3
+#define LED1B_GPIO_Port GPIOB
+#define LED1G_Pin GPIO_PIN_4
+#define LED1G_GPIO_Port GPIOB
+#define LED1R_Pin GPIO_PIN_5
+#define LED1R_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -8,7 +8,7 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
 void LEDWrite(bool LED1, float r, float g, float b) {
-  if (LED1) {
+  if (!LED1) {
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (uint32_t)(r * 65535.0f));
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (uint32_t)(g * 65535.0f));
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint32_t)(b * 65535.0f));
@@ -19,7 +19,7 @@ void LEDWrite(bool LED1, float r, float g, float b) {
   }
 }
 
-extern I2C_HandleTypeDef hi2c2;
+extern I2C_HandleTypeDef hi2c1;
 HAL_StatusTypeDef USB_Write_Raw(uint8_t reg, uint8_t* dataW, uint16_t len) {
   uint8_t txBuffer[len + 1];
   txBuffer[0] = reg;
@@ -27,17 +27,17 @@ HAL_StatusTypeDef USB_Write_Raw(uint8_t reg, uint8_t* dataW, uint16_t len) {
     memcpy(&txBuffer[1], dataW, len);
   }
   HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(
-      &hi2c2, USB_ADDRESS, txBuffer, len + 1, HAL_MAX_DELAY);
+      &hi2c1, USB_ADDRESS, txBuffer, len + 1, HAL_MAX_DELAY);
   return status;
 }
 
 HAL_StatusTypeDef USB_Read_Raw(uint8_t reg, uint8_t* dataR, uint16_t len) {
   HAL_StatusTypeDef status;
-  status = HAL_I2C_Master_Transmit(&hi2c2, USB_ADDRESS, &reg, 1, HAL_MAX_DELAY);
+  status = HAL_I2C_Master_Transmit(&hi2c1, USB_ADDRESS, &reg, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
     return status;
   }
-  return HAL_I2C_Master_Receive(&hi2c2, USB_ADDRESS, dataR, len, HAL_MAX_DELAY);
+  return HAL_I2C_Master_Receive(&hi2c1, USB_ADDRESS, dataR, len, HAL_MAX_DELAY);
 }
 
 // Returns 0, 1, 2 for PDO 1, 2, 3 respectively
