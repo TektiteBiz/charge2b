@@ -336,9 +336,14 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(2, "Current: %.1fA", current);
       ssd1306_PrintLine(3, "Power: %.1fW",
                         voltage * current);  // Power in Watts
-      ssd1306_PrintLine(4, "Time: %02lu:%02lu",
-                        GetChargeStateTime(batt1) / 60000,
-                        (GetChargeStateTime(batt1) % 60000) / 1000);
+
+      if (HAL_GetTick() % 5000 < 1500) {
+        ssd1306_PrintLine(4, "Temperature: %.1fC", ChargerTempCelsius(batt1));
+      } else {
+        ssd1306_PrintLine(4, "Time: %02lu:%02lu",
+                          GetChargeStateTime(batt1) / 60000,
+                          (GetChargeStateTime(batt1) % 60000) / 1000);
+      }
       break;
     case CS_TOPUP:
       ssd1306_PrintLine(0, "Trickle Charging");

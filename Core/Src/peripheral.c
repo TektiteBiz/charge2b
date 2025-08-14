@@ -1,5 +1,7 @@
 #include "peripheral.h"
 
+#include <math.h>
+
 #include "stm32f0xx_ll_adc.h"
 #include "stusb_registers.h"
 
@@ -565,30 +567,38 @@ const float ANALOG_SCALE = (3.3f / 4095.0f) * ((20000.0f + 5100.0f) / 5100.0f);
 const float ANALOG_SCALE_VBUS =
     (3.3f / 4095.0f) * ((20000.0f + 3300.0f) / 3300.0f);
 const float CURRENT_SCALE = (3.3f / 4095.0f) / (30.0f / 1000.0f * 50.0f);
-uint16_t batt_adc[6] = {0, 0, 0, 0, 0, 0};  // 5 channels + temp
+uint16_t batt_adc[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};  // 7 channels + temp + vref
 bool adcReady = false;
 extern ADC_HandleTypeDef hadc;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   (void)hadc;
   adcReady = true;
 }
-// Takes 13ms
+// TODO: Determine time this takes
 void UpdateADC() {
   // uint32_t start = HAL_GetTick();
-  uint32_t sums[6] = {0};
+  uint32_t sums[9] = {0};
   for (int i = 0; i < 100; i++) {
     adcReady = false;
-    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 6);
+    HAL_ADC_Start_DMA(&hadc, (uint32_t*)batt_adc, 9);
     while (!adcReady) {
       __NOP();
     }
-    for (int ch = 0; ch < 6; ch++) {
+    for (int ch = 0; ch < 9; ch++) {
       sums[ch] += batt_adc[ch];
     }
   }
-  for (int ch = 0; ch < 6; ch++) {
+  for (int ch = 0; ch < 9; ch++) {
     batt_adc[ch] = sums[ch] / 100;
   }
+  int vref_adc_mV =
+      __LL_ADC_CALC_VREFANALOG_VOLTAGE(batt_adc[8], LL_ADC_RESOLUTION_12B);
+
+  // Scale ADC channels using VREF channel
+  for (int ch = 0; ch < 8; ch++) {
+    batt_adc[ch] = (uint16_t)((uint32_t)batt_adc[ch] * 3300 / vref_adc_mV);
+  }
+
   // printf("ADC update took %lu ms\n", HAL_GetTick() - start);
 }
 float BatteryVoltage(bool chan1) {
@@ -597,15 +607,39 @@ float BatteryVoltage(bool chan1) {
 float BatteryCurrent(bool chan1) {
   return batt_adc[chan1 ? 2 : 3] * CURRENT_SCALE;
 }
-float VBUSVoltage() { return batt_adc[4] * ANALOG_SCALE_VBUS; }
+float ChargerTempCelsius(bool chan1) {
+  float val = (float)batt_adc[chan1 ? 4 : 5];
+
+  // Low-side 10K NTC thermistor
+  // High-side resistor: 3.3kohm
+  // Beta: 3455
+  // Calibration temp: 25°C
+
+  // Convert ADC to voltage (already VREF compensated)
+  float voltage = val * (3.3f / 4095.0f);
+
+  // Calculate thermistor resistance using voltage divider
+  // Vout = Vcc * R_therm / (R_high + R_therm)
+  // R_therm = R_high * Vout / (Vcc - Vout)
+  float r_therm = 3300.0f * voltage / (3.3f - voltage);
+
+  // Steinhart-Hart equation simplified for Beta model:
+  // 1/T = 1/T0 + (1/B) * ln(R/R0)
+  // Where T0 = 298.15K (25°C), R0 = 10000 ohms, B = 3455
+  float temp_kelvin =
+      1.0f / (1.0f / 298.15f + (1.0f / 3455.0f) * logf(r_therm / 10000.0f));
+
+  return temp_kelvin - 273.15f;  // Convert to Celsius
+}
+float VBUSVoltage() { return batt_adc[6] * ANALOG_SCALE_VBUS; }
 
 #define TS_CAL1 (*(uint16_t*)0x1FFFF7B8)  // ADC reading at 30°C
 #define TS_CAL2 (*(uint16_t*)0x1FFFF7C2)  // ADC reading at 110°C
 #define TEMP30 30.0f
 #define TEMP110 110.0f
 
-float TempCelsius() {  // TODO: Why is this not working
-  float adc_raw = (float)batt_adc[5];
+float TempCelsius() {
+  float adc_raw = (float)batt_adc[7];
   float temperature = ((adc_raw - (float)TS_CAL1)) * (TEMP110 - TEMP30) /
                           ((float)TS_CAL2 - (float)TS_CAL1) +
                       TEMP30;
