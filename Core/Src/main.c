@@ -278,9 +278,7 @@ int main(void) {
 
     // FSM
     fsm_Run(true, dT);
-    HAL_Delay(5);
     fsm_Run(false, dT);
-    HAL_Delay(5);
 
     // Render
     if (HAL_GetTick() - lastRender > 100) {
