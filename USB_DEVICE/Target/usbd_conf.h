@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : usbd_conf.h
-  * @version        : v2.0_Cube
-  * @brief          : Header for usbd_conf.c file.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : usbd_conf.h
+ * @version        : v2.0_Cube
+ * @brief          : Header for usbd_conf.c file.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -35,7 +35,10 @@
 #include "stm32f0xx_hal.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+/*---------- -----------*/
+#define USBD_SUPPORT_USER_STRING_DESC 1
+/*---------- -----------*/
+#define USBD_LPM_ENABLED 1
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER

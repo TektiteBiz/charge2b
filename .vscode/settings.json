@@ -16,6 +16,7 @@
     "*.HLA*": "hlasm",
     "*.go": "go",
     "*.gold": "mold",
-    "main.h": "c"
+    "main.h": "c",
+    "usb_device.h": "c"
   }
 }

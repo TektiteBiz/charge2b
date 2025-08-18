@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : usbd_desc.c
-  * @version        : v2.0_Cube
-  * @brief          : Header for usbd_conf.c file.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : usbd_desc.c
+ * @version        : v2.0_Cube
+ * @brief          : Header for usbd_conf.c file.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USBD_DESC__C__
@@ -52,6 +52,18 @@
 #define  USB_SIZ_STRING_SERIAL       0x1A
 
 /* USER CODE BEGIN EXPORTED_CONSTANTS */
+
+/* Microsoft OS String Descriptor */
+#define MS_OS_STRING_DESCRIPTOR_INDEX 0xEE
+#define MS_VENDOR_CODE 'P'
+
+/* WebUSB descriptor constants */
+#define WEBUSB_PLATFORM_CAPABILITY_UUID                                   \
+  0x38, 0xB6, 0x08, 0x34, 0xA9, 0x09, 0xA0, 0x47, 0x8B, 0xFD, 0xA0, 0x76, \
+      0x88, 0x15, 0xB6, 0x65
+
+#define WEBUSB_URL_DESCRIPTOR_INDEX 1
+#define WEBUSB_LANDING_PAGE_URL "tektitebiz.com/"
 
 /* USER CODE END EXPORTED_CONSTANTS */
 
@@ -120,6 +132,11 @@ extern USBD_DescriptorsTypeDef FS_Desc;
   */
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
+
+/* WebUSB descriptor functions */
+uint8_t *USBD_FS_BOSDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
+uint8_t *USBD_FS_UsrStrDescriptor(USBD_HandleTypeDef *pdev, uint8_t index,
+                                  uint16_t *length);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : usb_device.c
-  * @version        : v2.0_Cube
-  * @brief          : This file implements the USB Device
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : usb_device.c
+ * @version        : v2.0_Cube
+ * @brief          : This file implements the USB Device
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -86,6 +86,11 @@ void MX_USB_DEVICE_Init(void)
   }
 
   /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */
+
+  /* Add WebUSB support by adding user string descriptor handler */
+#if (USBD_SUPPORT_USER_STRING_DESC == 1U)
+  hUsbDeviceFS.pClass->GetUsrStrDescriptor = USBD_FS_UsrStrDescriptor;
+#endif
 
   /* USER CODE END USB_DEVICE_Init_PostTreatment */
 }

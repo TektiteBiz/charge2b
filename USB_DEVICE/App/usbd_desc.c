@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : App/usbd_desc.c
-  * @version        : v2.0_Cube
-  * @brief          : This file implements the USB device descriptors.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : App/usbd_desc.c
+ * @version        : v2.0_Cube
+ * @brief          : This file implements the USB device descriptors.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -25,6 +25,8 @@
 
 /* USER CODE BEGIN INCLUDE */
 
+#include "usbd_cdc.h"
+
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +35,11 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+/* WebUSB function prototypes */
+uint8_t *USBD_FS_BOSDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
+uint8_t *USBD_FS_UsrStrDescriptor(USBD_HandleTypeDef *pdev, uint8_t index,
+                                  uint16_t *length);
 
 /* USER CODE END PV */
 
@@ -80,6 +87,100 @@
 
 /* USER CODE BEGIN 0 */
 
+/* Microsoft OS String Descriptor */
+__ALIGN_BEGIN uint8_t USBD_MS_OS_StringDescriptor[] __ALIGN_END = {
+    0x12,                  // bLength: 18 bytes
+    USB_DESC_TYPE_STRING,  // bDescriptorType: String descriptor
+    'M',
+    0x00,
+    'S',
+    0x00,
+    'F',
+    0x00,
+    'T',
+    0x00,
+    '1',
+    0x00,
+    '0',
+    0x00,
+    '0',
+    0x00,            // "MSFT100"
+    MS_VENDOR_CODE,  // bMS_VendorCode
+    0x00             // bPad
+};
+
+/* BOS (Binary Object Store) Descriptor with WebUSB Platform Capability */
+__ALIGN_BEGIN uint8_t USBD_BOSDescriptor[] __ALIGN_END = {
+    /* BOS Descriptor header */
+    0x05,        // bLength: 5 bytes
+    0x0F,        // bDescriptorType: BOS
+    0x39, 0x00,  // wTotalLength: 57 bytes total
+    0x02,        // bNumDeviceCaps: 2 capabilities
+
+    /* USB 2.0 Extension Capability */
+    0x07,                    // bLength: 7 bytes
+    0x10,                    // bDescriptorType: Device Capability
+    0x02,                    // bDevCapabilityType: USB 2.0 Extension
+    0x02, 0x00, 0x00, 0x00,  // bmAttributes: LPM supported
+
+    /* WebUSB Platform Capability */
+    0x2C,                             // bLength: 44 bytes
+    0x10,                             // bDescriptorType: Device Capability
+    0x05,                             // bDevCapabilityType: Platform
+    0x00,                             // bReserved: 0
+    WEBUSB_PLATFORM_CAPABILITY_UUID,  // PlatformCapabilityUUID: WebUSB Platform
+                                      // Capability UUID
+    0x00, 0x01,                       // bcdVersion: 1.00
+    MS_VENDOR_CODE,                   // bVendorCode: Same as MS OS descriptor
+    WEBUSB_URL_DESCRIPTOR_INDEX       // iLandingPage: URL descriptor index
+};
+
+/* WebUSB URL Descriptor */
+__ALIGN_BEGIN uint8_t USBD_WebUSB_URLDescriptor[] __ALIGN_END = {
+    0x11,  // bLength: 17 bytes (2 + 15 for "tektitebiz.com/")
+    0x03,  // bDescriptorType: URL
+    0x01,  // bScheme: HTTPS
+    't',  'e', 'k', 't', 'i', 't', 'e', 'b',
+    'i',  'z', '.', 'c', 'o', 'm', '/'  // URL without "https://"
+};
+
+/**
+ * @brief  Return the BOS descriptor
+ * @param  speed : Current device speed
+ * @param  length : Pointer to data length variable
+ * @retval Pointer to descriptor buffer
+ */
+uint8_t *USBD_FS_BOSDescriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+  UNUSED(speed);
+  *length = sizeof(USBD_BOSDescriptor);
+  return USBD_BOSDescriptor;
+}
+
+/**
+ * @brief  Return the user string descriptor
+ * @param  pdev : Device handle
+ * @param  index : String index
+ * @param  length : Pointer to data length variable
+ * @retval Pointer to descriptor buffer
+ */
+uint8_t *USBD_FS_UsrStrDescriptor(USBD_HandleTypeDef *pdev, uint8_t index,
+                                  uint16_t *length) {
+  UNUSED(pdev);
+
+  switch (index) {
+    case MS_OS_STRING_DESCRIPTOR_INDEX:
+      *length = sizeof(USBD_MS_OS_StringDescriptor);
+      return USBD_MS_OS_StringDescriptor;
+
+    case WEBUSB_URL_DESCRIPTOR_INDEX:
+      *length = sizeof(USBD_WebUSB_URLDescriptor);
+      return USBD_WebUSB_URLDescriptor;
+
+    default:
+      *length = 0;
+      return NULL;
+  }
+}
 /* USER CODE END 0 */
 
 /** @defgroup USBD_DESC_Private_Macros USBD_DESC_Private_Macros
