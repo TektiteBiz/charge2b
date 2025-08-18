@@ -19,6 +19,7 @@ typedef enum CHARGE_ERROR {
   CHARGE_OVERVOLTAGE,
 } CHARGE_ERROR;
 
+void InitFSM();
 void SetChargeState(CHARGESTATE newState, bool batt1);
 uint32_t GetChargeStateTime(bool batt1);
 void fsm_Run(bool batt1, float dT);

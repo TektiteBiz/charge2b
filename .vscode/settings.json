@@ -17,6 +17,7 @@
     "*.go": "go",
     "*.gold": "mold",
     "main.h": "c",
-    "usb_device.h": "c"
+    "usb_device.h": "c",
+    "control.h": "c"
   }
 }

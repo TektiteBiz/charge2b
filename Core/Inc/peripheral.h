@@ -20,12 +20,17 @@ void UpdateADC();
 float BatteryVoltage(bool chan1);
 float BatteryCurrent(bool chan1);
 float VBUSVoltage();
+float ChargerTempCelsius(bool chan1);
 float TempCelsius();
 
 // Value for scaling 12-bit analog value to input voltage, where R1 is 2kohm and
 // R2 is 330ohm
 extern const float ANALOG_SCALE;
 #define SCALE_ANALOG(x) ((float)(x) * ANALOG_SCALE)
+
+HAL_StatusTypeDef EEPROM_Init();
+HAL_StatusTypeDef WriteEEPROM(uint32_t addr, uint8_t* data, uint16_t length);
+HAL_StatusTypeDef ReadEEPROM(uint32_t addr, uint8_t* data, uint16_t length);
 
 #ifdef __cplusplus
 }

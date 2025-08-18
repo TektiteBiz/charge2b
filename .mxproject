@@ -3,23 +3,26 @@ LibFiles=Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pcd.h;Drivers/STM32F0xx_
 
 [PreviousUsedCMakes]
 SourceFiles=Core/Src/main.c;USB_DEVICE/App/usb_device.c;USB_DEVICE/Target/usbd_conf.c;USB_DEVICE/App/usbd_desc.c;USB_DEVICE/App/usbd_cdc_if.c;Core/Src/stm32f0xx_it.c;Core/Src/stm32f0xx_hal_msp.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_ll_usb.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dma.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_cortex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_exti.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dac.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dac_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_iwdg.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c;Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c;Drivers/CMSIS/Device/ST/STM32F0xx/Source/Templates/system_stm32f0xx.c;Core/Src/system_stm32f0xx.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_ll_usb.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dma.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_cortex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_exti.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dac.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dac_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_iwdg.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c;Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c;Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c;Drivers/CMSIS/Device/ST/STM32F0xx/Source/Templates/system_stm32f0xx.c;Core/Src/system_stm32f0xx.c;;;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c;Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c;Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c;
-HeaderPath=Drivers/STM32F0xx_HAL_Driver/Inc;Drivers/STM32F0xx_HAL_Driver/Inc/Legacy;Middlewares/ST/STM32_USB_Device_Library/Core/Inc;Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;Drivers/CMSIS/Device/ST/STM32F0xx/Include;Drivers/CMSIS/Include;USB_DEVICE/App;USB_DEVICE/Target;Core/Inc;
+HeaderPath=Drivers/STM32F0xx_HAL_Driver/Inc;Drivers/STM32F0xx_HAL_Driver/Inc/Legacy;Middlewares/ST/STM32_USB_Device_Library/Core/Inc;Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;Drivers/CMSIS/Device/ST/STM32F0xx/Include;Drivers/CMSIS/Include;Drivers/BSP/Components/M24xx;EEPROM;USB_DEVICE/App;USB_DEVICE/Target;Core/Inc;
 CDefines=USE_HAL_DRIVER;STM32F072xB;USE_HAL_DRIVER;USE_HAL_DRIVER;
 
 [PreviousGenFiles]
 AdvancedFolderStructure=true
-HeaderFileListSize=7
-HeaderFiles#0=../USB_DEVICE/App/usb_device.h
-HeaderFiles#1=../USB_DEVICE/Target/usbd_conf.h
-HeaderFiles#2=../USB_DEVICE/App/usbd_desc.h
-HeaderFiles#3=../USB_DEVICE/App/usbd_cdc_if.h
-HeaderFiles#4=../Core/Inc/stm32f0xx_it.h
-HeaderFiles#5=../Core/Inc/stm32f0xx_hal_conf.h
-HeaderFiles#6=../Core/Inc/main.h
-HeaderFolderListSize=3
-HeaderPath#0=../USB_DEVICE/App
-HeaderPath#1=../USB_DEVICE/Target
-HeaderPath#2=../Core/Inc
+HeaderFileListSize=9
+HeaderFiles#0=../EEPROM/./pgeez1_conf.h
+HeaderFiles#1=../USB_DEVICE/App/usb_device.h
+HeaderFiles#2=../USB_DEVICE/Target/usbd_conf.h
+HeaderFiles#3=../USB_DEVICE/App/usbd_desc.h
+HeaderFiles#4=../USB_DEVICE/App/usbd_cdc_if.h
+HeaderFiles#5=../Core/Inc/stm32f0xx_it.h
+HeaderFiles#6=../Core/Inc/RTE_Components.h
+HeaderFiles#7=../Core/Inc/stm32f0xx_hal_conf.h
+HeaderFiles#8=../Core/Inc/main.h
+HeaderFolderListSize=4
+HeaderPath#0=../EEPROM/.
+HeaderPath#1=../USB_DEVICE/App
+HeaderPath#2=../USB_DEVICE/Target
+HeaderPath#3=../Core/Inc
 HeaderFiles=;
 SourceFileListSize=7
 SourceFiles#0=../USB_DEVICE/App/usb_device.c
@@ -34,4 +37,12 @@ SourcePath#0=../USB_DEVICE/App
 SourcePath#1=../USB_DEVICE/Target
 SourcePath#2=../Core/Src
 SourceFiles=;
+
+[ThirdPartyIp]
+ThirdPartyIpNumber=1
+ThirdPartyIpName#0=STMicroelectronics.X-CUBE-EEPRMA1.5.2.0
+
+[ThirdPartyIp#STMicroelectronics.X-CUBE-EEPRMA1.5.2.0]
+header=../Drivers/BSP/Components/M24xx/m24xx.h;
+source=../Drivers/BSP/Components/M24xx/m24xx.c;
 

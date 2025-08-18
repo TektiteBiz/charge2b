@@ -21,8 +21,8 @@ CHARGESTATE state1 = CS_DISCONNECTED;
 CHARGESTATE state2 = CS_DISCONNECTED;
 uint32_t stateSetTime1 = 0;
 uint32_t stateSetTime2 = 0;
-int chargeMode1 = 0;
-int chargeMode2 = 0;
+uint8_t chargeMode1 = 0;
+uint8_t chargeMode2 = 0;
 void SetChargeState(CHARGESTATE newState, bool batt1) {
   if (batt1) {
     state1 = newState;
@@ -39,12 +39,18 @@ uint32_t GetChargeStateTime(bool batt1) {
     return HAL_GetTick() - stateSetTime2;
   }
 }
-int getChargeMode(bool batt1) { return batt1 ? chargeMode1 : chargeMode2; }
-void setChargeMode(int mode, bool batt1) {
+void InitFSM() {
+  ReadEEPROM(0x00, &chargeMode1, 1);
+  ReadEEPROM(0x01, &chargeMode2, 1);
+}
+uint8_t getChargeMode(bool batt1) { return batt1 ? chargeMode1 : chargeMode2; }
+void setChargeMode(uint8_t mode, bool batt1) {
   if (batt1) {
     chargeMode1 = mode;
+    WriteEEPROM(0x00, &chargeMode1, 1);
   } else {
     chargeMode2 = mode;
+    WriteEEPROM(0x01, &chargeMode2, 1);
   }
 }
 CHARGE_ERROR chargeError1 = CHARGE_NONE;
@@ -95,7 +101,7 @@ void fsm_DISCONNECTED(bool batt1) {
       modePressed2 = false;
     }
     // Change charge mode
-    int newMode = getChargeMode(batt1) + 1;
+    uint8_t newMode = getChargeMode(batt1) + 1;
     if (newMode >= CHARGE_MODE_COUNT) {
       newMode = 0;
     }

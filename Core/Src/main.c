@@ -250,6 +250,17 @@ int main(void) {
     }
   }
 
+  // Set up EEPROM
+  if (EEPROM_Init() != HAL_OK) {
+    LEDWrite(true, 0.2f, 0.0f, 0.0f);
+    LEDWrite(false, 0.2f, 0.0f, 0.0f);
+    DisplayLoadingText("EEPROM INIT FAILED");
+    while (1) {
+      HAL_Delay(1000);
+    }
+  }
+  InitFSM();
+
   // Clear
   ssd1306_Display(true);
   ssd1306_Fill(Black);

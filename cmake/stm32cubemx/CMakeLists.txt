@@ -10,6 +10,7 @@ set(MX_Defines_Syms
 
 # STM32CubeMX generated include paths
 set(MX_Include_Dirs
+    ${CMAKE_SOURCE_DIR}/EEPROM
     ${CMAKE_SOURCE_DIR}/USB_DEVICE/App
     ${CMAKE_SOURCE_DIR}/USB_DEVICE/Target
     ${CMAKE_SOURCE_DIR}/Core/Inc
@@ -19,6 +20,7 @@ set(MX_Include_Dirs
     ${CMAKE_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32F0xx/Include
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
+    ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/M24xx
 )
 
 # STM32CubeMX generated application sources
@@ -63,6 +65,7 @@ set(STM32_Drivers_Src
     ${CMAKE_SOURCE_DIR}/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c
     ${CMAKE_SOURCE_DIR}/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c
     ${CMAKE_SOURCE_DIR}/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c
+    ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/M24xx/m24xx.c
 )
 
 # Drivers Midllewares

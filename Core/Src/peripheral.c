@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include "m24xx.h"
 #include "stm32f0xx_ll_adc.h"
 #include "stusb_registers.h"
 
@@ -644,4 +645,79 @@ float TempCelsius() {
                           ((float)TS_CAL2 - (float)TS_CAL1) +
                       TEMP30;
   return temperature;  // in °C
+}
+
+// EEPROM
+#define EEPROM_I2C_ADDR 0xA0  // Default M24C16 I2C address
+#define EEPROM_TIMEOUT 100    // I2C timeout in ms
+
+static int32_t EEPROM_I2C_Init(void) {
+  /* The I2C peripheral is already initialized by CubeMX's MX_I2C1_Init() */
+  /* This function can be left empty or return success */
+  return M24_OK;
+}
+
+static int32_t EEPROM_I2C_WriteReg(uint16_t DevAddr, uint16_t MemAddr,
+                                   uint8_t* pData, uint16_t Length) {
+  if (HAL_I2C_Mem_Write(&hi2c1, DevAddr, MemAddr, I2C_MEMADD_SIZE_16BIT, pData,
+                        Length, EEPROM_TIMEOUT) == HAL_OK) {
+    return M24_OK;
+  }
+  return M24_ERROR;
+}
+
+static int32_t EEPROM_I2C_ReadReg(uint16_t DevAddr, uint16_t MemAddr,
+                                  uint8_t* pData, uint16_t Length) {
+  if (HAL_I2C_Mem_Read(&hi2c1, DevAddr, MemAddr, I2C_MEMADD_SIZE_16BIT, pData,
+                       Length, EEPROM_TIMEOUT) == HAL_OK) {
+    return M24_OK;
+  }
+  return M24_ERROR;
+}
+
+static int32_t EEPROM_I2C_IsReady(uint16_t DevAddr, uint32_t Trials) {
+  if (HAL_I2C_IsDeviceReady(&hi2c1, DevAddr, Trials, EEPROM_TIMEOUT) ==
+      HAL_OK) {
+    return M24_OK;
+  }
+  return M24_BUSY;
+}
+
+/* The object for our specific EEPROM instance */
+M24_Object_t eepromObj;
+
+/* The I/O "bridge" that links the driver to our HAL functions */
+M24_IO_t eepromIO = {.Init = EEPROM_I2C_Init,
+                     .DeInit = NULL,  // Not needed
+                     .WriteReg = EEPROM_I2C_WriteReg,
+                     .ReadReg = EEPROM_I2C_ReadReg,
+                     .IsReady = EEPROM_I2C_IsReady,
+                     .Address = EEPROM_I2C_ADDR};
+
+HAL_StatusTypeDef EEPROM_Init() {
+  /* Link the I/O functions to the EEPROM object */
+  if (M24_RegisterBusIO(&eepromObj, &eepromIO) != M24_OK) {
+    return HAL_ERROR;
+  }
+
+  /* Call the main driver's Init function */
+  if (M24_i2c_Drv.Init(&eepromObj) != M24_OK) {
+    return HAL_ERROR;
+  }
+
+  return HAL_OK;
+}
+
+HAL_StatusTypeDef WriteEEPROM(uint32_t addr, uint8_t* data, uint16_t length) {
+  if (M24_i2c_Drv.WriteData(&eepromObj, data, addr, 16, length) != M24_OK) {
+    return HAL_ERROR;
+  }
+  return HAL_OK;
+}
+
+HAL_StatusTypeDef ReadEEPROM(uint32_t addr, uint8_t* data, uint16_t length) {
+  if (M24_i2c_Drv.ReadData(&eepromObj, data, addr, length) != M24_OK) {
+    return HAL_ERROR;
+  }
+  return HAL_OK;
 }
