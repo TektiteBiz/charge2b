@@ -92,6 +92,11 @@ void MX_USB_DEVICE_Init(void)
   hUsbDeviceFS.pClass->GetUsrStrDescriptor = USBD_FS_UsrStrDescriptor;
 #endif
 
+  /* Add BOS descriptor support for WebUSB */
+#if (USBD_LPM_ENABLED == 1U)
+  hUsbDeviceFS.pDesc->GetBOSDescriptor = USBD_FS_BOSDescriptor;
+#endif
+
   /* USER CODE END USB_DEVICE_Init_PostTreatment */
 }
 
