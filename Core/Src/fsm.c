@@ -12,6 +12,7 @@ const char* CHARGE_MODES[CHARGE_MODE_COUNT] = {"Slow", "Normal", "Fast",
 const float CHARGE_CURRENT[CHARGE_MODE_COUNT] = {0.8f, 1.2f, 1.6f, 2.0f};
 const float TOPUP_CURRENT = 0.07f;
 const float PRECHARGE_CURRENT = 0.2f;
+#define MAX_TEMP 100.0f  // Celsius
 
 float maxVoltage1 = 0.0f;
 float maxVoltage2 = 0.0f;
@@ -193,6 +194,33 @@ void fsm_CHARGE(bool batt1, float dT) {
     SetChargeState(CS_ERROR, batt1);
     return;
   }
+
+  // Check if overtemperature
+  if (ChargerTempCelsius(batt1) > MAX_TEMP) {
+    SetChargeState(CS_OVERTEMP, batt1);
+  }
+}
+
+void fsm_OVERTEMP(bool batt1, float dt) {
+  // Writes
+  LEDWrite(batt1, 0.1f, 0.1f, 0.0f);
+
+  // Control
+  ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
+  EnableReg(batt1, false);  // Disable regulator
+
+  // Check if battery disconnected
+  if (BatteryCurrent(batt1) < 0.1f) {
+    // Battery disconnected
+    SetChargeState(CS_DISCONNECTED, batt1);
+  }
+
+  // Check if temperature ok
+  if (ChargerTempCelsius(batt1) < MAX_TEMP - 10.0f) {
+    // Temperature ok, go back to charge state
+    SetChargeState(CS_CHARGE, batt1);
+    return;
+  }
 }
 
 void fsm_TOPUP(bool batt1, float dT) {
@@ -304,6 +332,9 @@ void fsm_Run(bool batt1, float dT) {
     case CS_PRECHARGE:
       fsm_PRECHARGE(batt1, dT);
       break;
+    case CS_OVERTEMP:
+      fsm_OVERTEMP(batt1, dT);
+      break;
     case CS_ERROR:
       fsm_Error(batt1);
       break;
@@ -358,6 +389,14 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(3, "Power: %.2fW",
                         BatteryVoltage(batt1) * BatteryCurrent(batt1));
       ssd1306_PrintLine(4, "Time: %02lu:%02lu",
+                        GetChargeStateTime(batt1) / 60000,
+                        (GetChargeStateTime(batt1) % 60000) / 1000);
+      break;
+    case CS_OVERTEMP:
+      ssd1306_PrintLine(0, "Overtemperature");
+      ssd1306_PrintLine(1, "Voltage: %.1fV", BatteryVoltage(batt1));
+      ssd1306_PrintLine(2, "Temperature: %.1fC", ChargerTempCelsius(batt1));
+      ssd1306_PrintLine(3, "Time: %02lu:%02lu",
                         GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
       break;
