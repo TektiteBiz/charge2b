@@ -43,6 +43,16 @@ uint32_t GetChargeStateTime(bool batt1) {
 void InitFSM() {
   ReadEEPROM(0x00, &chargeMode1, 1);
   ReadEEPROM(0x01, &chargeMode2, 1);
+
+  // Check if needs fixing
+  if (chargeMode1 > CHARGE_MODE_COUNT - 1) {
+    chargeMode1 = 0;
+    WriteEEPROM(0x00, &chargeMode1, 1);
+  }
+  if (chargeMode2 > CHARGE_MODE_COUNT - 1) {
+    chargeMode2 = 0;
+    WriteEEPROM(0x01, &chargeMode2, 1);
+  }
 }
 uint8_t getChargeMode(bool batt1) { return batt1 ? chargeMode1 : chargeMode2; }
 void setChargeMode(uint8_t mode, bool batt1) {
@@ -201,7 +211,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 }
 
-void fsm_OVERTEMP(bool batt1, float dt) {
+void fsm_OVERTEMP(bool batt1) {
   // Writes
   LEDWrite(batt1, 0.1f, 0.1f, 0.0f);
 
@@ -333,7 +343,7 @@ void fsm_Run(bool batt1, float dT) {
       fsm_PRECHARGE(batt1, dT);
       break;
     case CS_OVERTEMP:
-      fsm_OVERTEMP(batt1, dT);
+      fsm_OVERTEMP(batt1);
       break;
     case CS_ERROR:
       fsm_Error(batt1);
@@ -373,14 +383,10 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(2, "Current: %.1fA", current);
       ssd1306_PrintLine(3, "Power: %.1fW",
                         voltage * current);  // Power in Watts
-
-      if (HAL_GetTick() % 5000 < 1500) {
-        ssd1306_PrintLine(4, "Temperature: %.1fC", ChargerTempCelsius(batt1));
-      } else {
-        ssd1306_PrintLine(4, "Time: %02lu:%02lu",
-                          GetChargeStateTime(batt1) / 60000,
-                          (GetChargeStateTime(batt1) % 60000) / 1000);
-      }
+      ssd1306_PrintLine(4, "%02lu:%02lu | %.1fC",
+                        GetChargeStateTime(batt1) / 60000,
+                        (GetChargeStateTime(batt1) % 60000) / 1000,
+                        ChargerTempCelsius(batt1));
       break;
     case CS_TOPUP:
       ssd1306_PrintLine(0, "Trickle Charging");

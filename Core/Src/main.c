@@ -154,6 +154,10 @@ int main(void) {
   EnableReg(true, false);  // Disable regs
   EnableReg(false, false);
 
+  /*// TODO: REMOVE
+  __HAL_RCC_DBGMCU_CLK_ENABLE();
+  __HAL_DBGMCU_FREEZE_IWDG();*/
+
   // Start LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -186,6 +190,9 @@ int main(void) {
   ssd1306_WriteString("NEGOTIATING PDO", Font_6x8, White);
   ssd1306_UpdateScreen();
 
+  // IWDG reset
+  HAL_IWDG_Refresh(&hiwdg);
+
   // USB Read
   bool needsWrite = false;
   for (int i = 0; i < 3; i++) {
@@ -217,6 +224,9 @@ int main(void) {
     printf("Write NVM from PDOs Status - %d\n", status);
   }
 
+  // IWDG reset
+  HAL_IWDG_Refresh(&hiwdg);
+
   bool negotiated = false;
   int timeout_count = 0;
   const int max_timeout = 20;  // 5 seconds (20 * 250ms)
@@ -226,6 +236,7 @@ int main(void) {
     printf("Negotiated PDO: %d\n", negotiated);
     HAL_Delay(250);
     timeout_count++;
+    HAL_IWDG_Refresh(&hiwdg);
   }
 
   if (!negotiated) {
@@ -234,7 +245,8 @@ int main(void) {
     LEDWrite(false, 0.2f, 0.0f, 0.0f);
     DisplayLoadingText("NO PD SOURCE");
     while (1) {
-      HAL_Delay(1000);
+      HAL_Delay(500);
+      HAL_IWDG_Refresh(&hiwdg);
     }
   }
 
@@ -246,7 +258,8 @@ int main(void) {
     LEDWrite(false, 0.2f, 0.0f, 0.0f);
     DisplayLoadingText("UNDER 65W BRICK");
     while (1) {
-      HAL_Delay(1000);
+      HAL_Delay(500);
+      HAL_IWDG_Refresh(&hiwdg);
     }
   }
 
@@ -256,7 +269,8 @@ int main(void) {
     LEDWrite(false, 0.2f, 0.0f, 0.0f);
     DisplayLoadingText("EEPROM INIT FAILED");
     while (1) {
-      HAL_Delay(1000);
+      HAL_Delay(500);
+      HAL_IWDG_Refresh(&hiwdg);
     }
   }
   InitFSM();

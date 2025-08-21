@@ -12,13 +12,19 @@ extern TIM_HandleTypeDef htim3;
 
 void LEDWrite(bool LED1, float r, float g, float b) {
   if (!LED1) {
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (uint32_t)(r * 65535.0f));
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (uint32_t)(g * 65535.0f));
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint32_t)(b * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
+                          (uint32_t)((1.0f - r) * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
+                          (uint32_t)((1.0f - g) * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
+                          (uint32_t)((1.0f - b) * 65535.0f));
   } else {
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint32_t)(r * 65535.0f));
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)(g * 65535.0f));
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, (uint32_t)(b * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,
+                          (uint32_t)((1.0f - r) * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,
+                          (uint32_t)((1.0f - g) * 65535.0f));
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2,
+                          (uint32_t)((1.0f - b) * 65535.0f));
   }
 }
 
@@ -675,6 +681,24 @@ static int32_t EEPROM_I2C_ReadReg(uint16_t DevAddr, uint16_t MemAddr,
   return M24_ERROR;
 }
 
+static int32_t EEPROM_I2C_ReadReg16(uint16_t DevAddr, uint16_t MemAddr,
+                                    uint8_t* pData, uint16_t Length) {
+  if (HAL_I2C_Mem_Read(&hi2c1, DevAddr, MemAddr, I2C_MEMADD_SIZE_8BIT, pData,
+                       Length, EEPROM_TIMEOUT) == HAL_OK) {
+    return M24_OK;
+  }
+  return M24_ERROR;
+}
+
+static int32_t EEPROM_I2C_WriteReg16(uint16_t DevAddr, uint16_t MemAddr,
+                                     uint8_t* pData, uint16_t Length) {
+  if (HAL_I2C_Mem_Write(&hi2c1, DevAddr, MemAddr, I2C_MEMADD_SIZE_8BIT, pData,
+                        Length, EEPROM_TIMEOUT) == HAL_OK) {
+    return M24_OK;
+  }
+  return M24_ERROR;
+}
+
 static int32_t EEPROM_I2C_IsReady(uint16_t DevAddr, uint32_t Trials) {
   if (HAL_I2C_IsDeviceReady(&hi2c1, DevAddr, Trials, EEPROM_TIMEOUT) ==
       HAL_OK) {
@@ -683,6 +707,8 @@ static int32_t EEPROM_I2C_IsReady(uint16_t DevAddr, uint32_t Trials) {
   return M24_BUSY;
 }
 
+static void EEPROM_I2C_Delay(uint32_t DelayMs) { HAL_Delay(DelayMs); }
+
 /* The object for our specific EEPROM instance */
 M24_Object_t eepromObj;
 
@@ -690,8 +716,12 @@ M24_Object_t eepromObj;
 M24_IO_t eepromIO = {.Init = EEPROM_I2C_Init,
                      .DeInit = NULL,  // Not needed
                      .WriteReg = EEPROM_I2C_WriteReg,
+                     .WriteReg16 = EEPROM_I2C_WriteReg16,
+                     .Transmit = NULL,  // Not needed for this implementation
                      .ReadReg = EEPROM_I2C_ReadReg,
+                     .ReadReg16 = EEPROM_I2C_ReadReg16,
                      .IsReady = EEPROM_I2C_IsReady,
+                     .Delay = EEPROM_I2C_Delay,
                      .Address = EEPROM_I2C_ADDR};
 
 HAL_StatusTypeDef EEPROM_Init() {
