@@ -173,8 +173,8 @@ int main(void) {
   __enable_irq();
 
   // Display
-  LEDWrite(true, 0.0f, 0.0f, 0.2f);
-  LEDWrite(false, 0.0f, 0.0f, 0.2f);
+  LEDWrite(true, 0.0f, 0.0f, 0.4f);
+  LEDWrite(false, 0.0f, 0.0f, 0.4f);
 
   ssd1306_Display(true);
   ssd1306_Init();
@@ -241,8 +241,8 @@ int main(void) {
 
   if (!negotiated) {
     printf("PD negotiation timeout - no PD source detected\n");
-    LEDWrite(true, 0.2f, 0.0f, 0.0f);  // Red LEDs for error
-    LEDWrite(false, 0.2f, 0.0f, 0.0f);
+    LEDWrite(true, 0.4f, 0.0f, 0.0f);  // Red LEDs for error
+    LEDWrite(false, 0.4f, 0.0f, 0.0f);
     DisplayLoadingText("NO PD SOURCE");
     while (1) {
       HAL_Delay(500);
@@ -254,8 +254,8 @@ int main(void) {
   USB_NegotiatedPower(&active);
   printf("Active PDO voltage: %d\n", active);
   if (!active) {  // Not 65W brick
-    LEDWrite(true, 0.2f, 0.0f, 0.0f);
-    LEDWrite(false, 0.2f, 0.0f, 0.0f);
+    LEDWrite(true, 0.4f, 0.0f, 0.0f);
+    LEDWrite(false, 0.4f, 0.0f, 0.0f);
     DisplayLoadingText("UNDER 65W BRICK");
     while (1) {
       HAL_Delay(500);
@@ -265,8 +265,8 @@ int main(void) {
 
   // Set up EEPROM
   if (EEPROM_Init() != HAL_OK) {
-    LEDWrite(true, 0.2f, 0.0f, 0.0f);
-    LEDWrite(false, 0.2f, 0.0f, 0.0f);
+    LEDWrite(true, 0.4f, 0.0f, 0.0f);
+    LEDWrite(false, 0.4f, 0.0f, 0.0f);
     DisplayLoadingText("EEPROM INIT FAILED");
     while (1) {
       HAL_Delay(500);

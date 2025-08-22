@@ -132,7 +132,7 @@ uint32_t voltageDropTime1 = 0;
 uint32_t voltageDropTime2 = 0;
 void fsm_CHARGE(bool batt1, float dT) {
   // Writes
-  LEDWrite(batt1, 0.2f, 0.0f, 0.0f);
+  LEDWrite(batt1, 0.4f, 0.0f, 0.0f);
 
   // Charge battery
   ControlUpdate(batt1, dT);
@@ -146,7 +146,8 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Termination detection
-  if (GetChargeStateTime(batt1) < 5000) {
+  if (GetChargeStateTime(batt1) <
+      1500) {  // 1.5s cooldown after pluggin in battery
     return;
   }
   float maxVolt = batt1 ? maxVoltage1 : maxVoltage2;
@@ -213,7 +214,7 @@ void fsm_CHARGE(bool batt1, float dT) {
 
 void fsm_OVERTEMP(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.1f, 0.1f, 0.0f);
+  LEDWrite(batt1, 0.2f, 0.0f, 0.2f);
 
   // Control
   ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
@@ -235,10 +236,10 @@ void fsm_OVERTEMP(bool batt1) {
 
 void fsm_TOPUP(bool batt1, float dT) {
   // Writes
-  LEDWrite(batt1, 0.0f, 0.2f, 0.0f);
+  LEDWrite(batt1, 0.0f, 0.4f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 5000) {
+  if (GetChargeStateTime(batt1) < 1500) {
     return;
   }
 
@@ -266,7 +267,7 @@ void fsm_TOPUP(bool batt1, float dT) {
 
 void fsm_DONE(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.0f, 0.2f, 0.0f);
+  LEDWrite(batt1, 0.0f, 0.4f, 0.0f);
   EnableReg(batt1, false);
   setChargeError(CHARGE_NONE, batt1);
   // Check if battery disconnected
@@ -278,10 +279,10 @@ void fsm_DONE(bool batt1) {
 
 void fsm_PRECHARGE(bool batt1, float dT) {
   // Writes
-  LEDWrite(batt1, 0.2f, 0.0f, 0.0f);
+  LEDWrite(batt1, 0.4f, 0.0f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 5000) {
+  if (GetChargeStateTime(batt1) < 1500) {
     return;
   }
 
@@ -310,7 +311,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
 
 void fsm_Error(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.15f, 0.15f, 0.0f);
+  LEDWrite(batt1, 0.2f, 0.2f, 0.0f);
   EnableReg(batt1, false);
 
   if (GetChargeStateTime(batt1) < 5000) {
