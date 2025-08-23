@@ -145,39 +145,9 @@ void fsm_CHARGE(bool batt1, float dT) {
     return;
   }
 
-  // Termination detection
-  if (GetChargeStateTime(batt1) <
-      1500) {  // 1.5s cooldown after pluggin in battery
+  // 5s cooldown after plugging in battery
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
-  }
-  float maxVolt = batt1 ? maxVoltage1 : maxVoltage2;
-  if (BatteryVoltage(batt1) > maxVolt) {
-    if (batt1) {
-      maxVoltage1 = BatteryVoltage(batt1);
-      voltageDropTime1 = 0;
-    } else {
-      maxVoltage2 = BatteryVoltage(batt1);
-      voltageDropTime2 = 0;
-    }
-  }
-  // 50mV dV/dt
-  if (maxVolt - BatteryVoltage(batt1) > 0.05f) {
-    uint32_t voltageDropTime = batt1 ? voltageDropTime1 : voltageDropTime2;
-    if (voltageDropTime == 0) {  // Set voltage drop time
-      if (batt1) {
-        voltageDropTime1 = HAL_GetTick();
-      } else {
-        voltageDropTime2 = HAL_GetTick();
-      }
-    }
-
-    // Check if voltage drop time exceeded
-    if (HAL_GetTick() - voltageDropTime > 2000) {
-      // Go to top-up phase
-      ResetCurrent(batt1, TOPUP_CURRENT);
-      SetChargeState(CS_TOPUP, batt1);
-      return;
-    }
   }
 
   // Check if battery disconnected
@@ -210,11 +180,50 @@ void fsm_CHARGE(bool batt1, float dT) {
   if (ChargerTempCelsius(batt1) > MAX_TEMP) {
     SetChargeState(CS_OVERTEMP, batt1);
   }
+
+  // Termination detection
+  // First, make sure current is nominal
+  float currErr =
+      fabsf(CHARGE_CURRENT[getChargeMode(batt1)] - BatteryCurrent(batt1));
+  if (currErr > 0.03f) {
+    return;
+  }
+
+  // Maximum voltage recording
+  float maxVolt = batt1 ? maxVoltage1 : maxVoltage2;
+  if (BatteryVoltage(batt1) > maxVolt) {
+    if (batt1) {
+      maxVoltage1 = BatteryVoltage(batt1);
+      voltageDropTime1 = 0;
+    } else {
+      maxVoltage2 = BatteryVoltage(batt1);
+      voltageDropTime2 = 0;
+    }
+  }
+  // 50mV dV/dt
+  if (maxVolt - BatteryVoltage(batt1) > 0.05f) {
+    uint32_t voltageDropTime = batt1 ? voltageDropTime1 : voltageDropTime2;
+    if (voltageDropTime == 0) {  // Set voltage drop time
+      if (batt1) {
+        voltageDropTime1 = HAL_GetTick();
+      } else {
+        voltageDropTime2 = HAL_GetTick();
+      }
+    }
+
+    // Check if voltage drop time exceeded
+    if (HAL_GetTick() - voltageDropTime > 2000) {
+      // Go to top-up phase
+      ResetCurrent(batt1, TOPUP_CURRENT);
+      SetChargeState(CS_TOPUP, batt1);
+      return;
+    }
+  }
 }
 
 void fsm_OVERTEMP(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.2f, 0.0f, 0.2f);
+  LEDWrite(batt1, 0.2f, 0.1f, 0.0f);
 
   // Control
   ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
@@ -239,7 +248,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   LEDWrite(batt1, 0.0f, 0.4f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 1500) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
 
@@ -282,7 +291,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
   LEDWrite(batt1, 0.4f, 0.0f, 0.0f);
   ControlUpdate(batt1, dT);
 
-  if (GetChargeStateTime(batt1) < 1500) {
+  if (GetChargeStateTime(batt1) < 5000) {
     return;
   }
 
@@ -311,7 +320,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
 
 void fsm_Error(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.2f, 0.2f, 0.0f);
+  LEDWrite(batt1, 0.15f, 0.15f, 0.15f);
   EnableReg(batt1, false);
 
   if (GetChargeStateTime(batt1) < 5000) {

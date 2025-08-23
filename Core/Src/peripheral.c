@@ -608,8 +608,24 @@ void UpdateADC() {
 
   // printf("ADC update took %lu ms\n", HAL_GetTick() - start);
 }
+
+// Low-pass filter voltage, to fix dV/dt detection
+float battVoltage1 = 0.0f;
+float battVoltage2 = 0.0f;
 float BatteryVoltage(bool chan1) {
-  return batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
+  float val = batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
+  float currFiltered = chan1 ? battVoltage1 : battVoltage2;
+  if (fabsf(currFiltered - val) > 0.15f) {
+    currFiltered = val;
+  } else {
+    currFiltered = currFiltered * 0.95f + val * 0.05f;
+  }
+  if (chan1) {
+    battVoltage1 = currFiltered;
+  } else {
+    battVoltage2 = currFiltered;
+  }
+  return currFiltered;
 }
 float BatteryCurrent(bool chan1) {
   return batt_adc[chan1 ? 2 : 3] * CURRENT_SCALE;
