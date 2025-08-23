@@ -260,7 +260,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.3f) {
+  if (BatteryVoltage(batt1) > 14.4f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
