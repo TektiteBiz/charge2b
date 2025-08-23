@@ -221,7 +221,7 @@ void fsm_OVERTEMP(bool batt1) {
   EnableReg(batt1, false);  // Disable regulator
 
   // Check if battery disconnected
-  if (BatteryCurrent(batt1) < 0.1f) {
+  if (BatteryVoltage(batt1) < 8.5f) {
     // Battery disconnected
     SetChargeState(CS_DISCONNECTED, batt1);
   }
