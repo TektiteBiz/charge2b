@@ -158,7 +158,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.9f) {
+  if (BatteryVoltage(batt1) > 14.3f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -223,7 +223,7 @@ void fsm_CHARGE(bool batt1, float dT) {
 
 void fsm_OVERTEMP(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.2f, 0.1f, 0.0f);
+  LEDWrite(batt1, 0.15f, 0.15f, 0.0f);
 
   // Control
   ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
@@ -260,7 +260,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.9f) {
+  if (BatteryVoltage(batt1) > 14.3f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -320,7 +320,7 @@ void fsm_PRECHARGE(bool batt1, float dT) {
 
 void fsm_Error(bool batt1) {
   // Writes
-  LEDWrite(batt1, 0.15f, 0.15f, 0.15f);
+  LEDWrite(batt1, 0.2f, 0.1f, 0.0f);
   EnableReg(batt1, false);
 
   if (GetChargeStateTime(batt1) < 5000) {
@@ -443,7 +443,7 @@ void fsm_Render(bool batt1) {
           ssd1306_PrintLine(1, "Precharge Overtime");
           break;
         case CHARGE_OVERVOLTAGE:
-          ssd1306_PrintLine(1, "Charge Overvoltage");
+          ssd1306_PrintLine(1, "Overvoltage");
           break;
       }
       ssd1306_PrintLine(2, "Voltage: %.1fV", BatteryVoltage(batt1));

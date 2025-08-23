@@ -34,6 +34,9 @@ void ControlUpdate(bool batt1, float dT) {
     }
     iNew += integrator * err * dT;  // Integrate error
   }
+  if (iNew > 15.0f) {
+    iNew = 15.0f;
+  }
   WriteVoltage(batt1, iNew);
   if (batt1) {
     m_i1 = iNew;
