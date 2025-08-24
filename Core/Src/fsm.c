@@ -200,8 +200,8 @@ void fsm_CHARGE(bool batt1, float dT) {
       voltageDropTime2 = 0;
     }
   }
-  // 50mV dV/dt
-  if (maxVolt - BatteryVoltage(batt1) > 0.05f) {
+  // 70mV dV/dt
+  if (maxVolt - BatteryVoltage(batt1) > 0.07f) {
     uint32_t voltageDropTime = batt1 ? voltageDropTime1 : voltageDropTime2;
     if (voltageDropTime == 0) {  // Set voltage drop time
       if (batt1) {

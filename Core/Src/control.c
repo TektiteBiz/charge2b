@@ -8,7 +8,7 @@ float curr1 = 0.0f;
 float curr2 = 0.0f;
 
 #define kI 0.4f     // Integrator gain
-#define kI_0A 0.1f  // Integrator gain when low battery current (battery likely
+#define kI_0A 0.2f  // Integrator gain when low battery current (battery likely
 // disconnected, its possible that its just initial connection though)
 
 void ResetCurrent(bool chan1, float current) {
@@ -27,10 +27,11 @@ void ControlUpdate(bool batt1, float dT) {
     iNew = voltage;
   } else {
     float battCurr = BatteryCurrent(batt1);
-    float err = (batt1 ? curr1 : curr2) - battCurr;
+    float targCurr = (batt1 ? curr1 : curr2);
+    float err = targCurr - battCurr;
     float integrator = kI;
     if (battCurr < 0.03f) {
-      integrator = kI_0A;
+      integrator = kI_0A / targCurr;  // Faster integrator when low current
     }
     iNew += integrator * err * dT;  // Integrate error
   }
