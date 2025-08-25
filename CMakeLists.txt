@@ -53,6 +53,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/ssd1306_fonts.c
     Core/Src/fsm.c
     Core/Src/control.c
+    Core/Src/irmeas.c
 )
 
 # Add include paths

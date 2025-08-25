@@ -1,6 +1,7 @@
 #include "fsm.h"
 
 #include "control.h"
+#include "irmeas.h"
 #include "peripheral.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
@@ -44,12 +45,13 @@ void InitFSM() {
   ReadEEPROM(0x00, &chargeMode1, 1);
   ReadEEPROM(0x01, &chargeMode2, 1);
 
-  // Check if needs fixing
-  if (chargeMode1 > CHARGE_MODE_COUNT - 1) {
+  // Check if needs fixing, not greater than -1 cuz if it is equal to charge
+  // mode count that is internal resistance measurement
+  if (chargeMode1 > CHARGE_MODE_COUNT) {
     chargeMode1 = 0;
     WriteEEPROM(0x00, &chargeMode1, 1);
   }
-  if (chargeMode2 > CHARGE_MODE_COUNT - 1) {
+  if (chargeMode2 > CHARGE_MODE_COUNT) {
     chargeMode2 = 0;
     WriteEEPROM(0x01, &chargeMode2, 1);
   }
@@ -90,7 +92,11 @@ void fsm_DISCONNECTED(bool batt1) {
   float voltage = BatteryVoltage(batt1);
   if (voltage >= 8.5f &&
       GetChargeStateTime(batt1) > 1000) {  // Battery connected
-    SetChargeState(CS_CHARGE, batt1);
+    if (getChargeMode(batt1) == CHARGE_MODE_COUNT) {
+      SetChargeState(CS_IRMEAS, batt1);
+    } else {
+      SetChargeState(CS_CHARGE, batt1);
+    }
   }
 
   // Handle mode button press, switch modes
@@ -113,13 +119,19 @@ void fsm_DISCONNECTED(bool batt1) {
     }
     // Change charge mode
     uint8_t newMode = getChargeMode(batt1) + 1;
-    if (newMode >= CHARGE_MODE_COUNT) {
+    if (newMode >= CHARGE_MODE_COUNT + 1) {
       newMode = 0;
     }
     setChargeMode(newMode, batt1);
   }
-  // Update charge mode current
-  ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
+
+  if (getChargeMode(batt1) == CHARGE_MODE_COUNT) {
+    // IR measurement mode
+    ResetIRMeas(batt1);
+  } else {
+    // Update charge mode current
+    ResetCurrent(batt1, CHARGE_CURRENT[getChargeMode(batt1)]);
+  }
 
   if (batt1) {
     maxVoltage1 = 0.0f;
@@ -274,6 +286,43 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 }
 
+void fsm_IRMEAS(bool batt1, float dT) {
+  // Writes
+  LEDWrite(batt1, 0.2f, 0.0f, 0.1f);
+
+  // Let orig voltage measurement settle
+  if (GetChargeStateTime(batt1) < 1500) {
+    EnableReg(batt1, false);
+    return;
+  }
+
+  // Check if battery disconnected
+  if (IRMeasDone(batt1) || GetChargeStateTime(batt1) < 7500) {
+    // Battery isn't powered or getting up to current
+    if (BatteryVoltage(batt1) < 8.5f) {  // Battery disconnected
+      SetChargeState(CS_DISCONNECTED, batt1);
+      return;
+    }
+  } else {
+    if (BatteryCurrent(batt1) < 0.03f) {
+      // Battery disconnected
+      SetChargeState(CS_DISCONNECTED, batt1);
+      return;
+    }
+  }
+
+  // Check if overvoltage
+  if (BatteryVoltage(batt1) > 14.3f) {
+    // Overvoltage detected
+    setChargeError(CHARGE_OVERVOLTAGE, batt1);
+    SetChargeState(CS_ERROR, batt1);
+    return;
+  }
+
+  // Update IRMeas
+  IRMeasUpdate(batt1, dT);
+}
+
 void fsm_DONE(bool batt1) {
   // Writes
   LEDWrite(batt1, 0.0f, 0.4f, 0.0f);
@@ -355,6 +404,9 @@ void fsm_Run(bool batt1, float dT) {
     case CS_OVERTEMP:
       fsm_OVERTEMP(batt1);
       break;
+    case CS_IRMEAS:
+      fsm_IRMEAS(batt1, dT);
+      break;
     case CS_ERROR:
       fsm_Error(batt1);
       break;
@@ -382,8 +434,13 @@ void fsm_Render(bool batt1) {
     case CS_DISCONNECTED:
       ssd1306_PrintLine(0, "Idle");
       ssd1306_PrintLine(2, "Mode:");
-      ssd1306_PrintLine(3, "%s - %.1fA", CHARGE_MODES[getChargeMode(batt1)],
-                        CHARGE_CURRENT[getChargeMode(batt1)]);
+      uint8_t mode = getChargeMode(batt1);
+      if (mode == CHARGE_MODE_COUNT) {
+        ssd1306_PrintLine(3, "IR Measurement");
+      } else {
+        ssd1306_PrintLine(3, "%s - %.1fA", CHARGE_MODES[mode],
+                          CHARGE_CURRENT[mode]);
+      }
       break;
     case CS_CHARGE:
       ssd1306_PrintLine(0, "Battery Charging");
@@ -429,6 +486,19 @@ void fsm_Render(bool batt1) {
       ssd1306_PrintLine(4, "Time: %02lu:%02lu",
                         GetChargeStateTime(batt1) / 60000,
                         (GetChargeStateTime(batt1) % 60000) / 1000);
+      break;
+    case CS_IRMEAS:
+      ssd1306_PrintLine(0, "IR Measurement");
+      ssd1306_PrintLine(1, "%.1fmOhm", GetIRValue(batt1));
+      ssd1306_PrintLine(2, "Voltage: %.1fV", BatteryVoltage(batt1));
+      if (!IRMeasDone(batt1)) {
+        ssd1306_PrintLine(3, "Current: %.1fA", BatteryCurrent(batt1));
+        ssd1306_PrintLine(4, "Time: %02lu:%02lu",
+                          GetChargeStateTime(batt1) / 60000,
+                          (GetChargeStateTime(batt1) % 60000) / 1000);
+      } else {
+        ssd1306_PrintLine(3, "Done");
+      }
       break;
     case CS_ERROR:
       ssd1306_PrintLine(0, "Charging Error");

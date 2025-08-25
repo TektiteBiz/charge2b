@@ -582,6 +582,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   adcReady = true;
 }
 // TODO: Determine time this takes
+
+bool filterUpdated1 = false;
+bool filterUpdated2 = false;
 void UpdateADC() {
   // uint32_t start = HAL_GetTick();
   uint32_t sums[9] = {0};
@@ -606,15 +609,23 @@ void UpdateADC() {
     batt_adc[ch] = (uint16_t)((uint32_t)batt_adc[ch] * 3300 / vref_adc_mV);
   }
 
+  filterUpdated1 = false;
+  filterUpdated2 = false;
+
   // printf("ADC update took %lu ms\n", HAL_GetTick() - start);
 }
 
 // Low-pass filter voltage, to fix dV/dt detection
 float battVoltage1 = 0.0f;
 float battVoltage2 = 0.0f;
+
 float BatteryVoltage(bool chan1) {
-  float val = batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
   float currFiltered = chan1 ? battVoltage1 : battVoltage2;
+  if (chan1 ? filterUpdated1 : filterUpdated2) {
+    return currFiltered;
+  }
+
+  float val = batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
   if (fabsf(currFiltered - val) > 0.15f) {
     currFiltered = val;
   } else {
@@ -622,8 +633,10 @@ float BatteryVoltage(bool chan1) {
   }
   if (chan1) {
     battVoltage1 = currFiltered;
+    filterUpdated1 = false;
   } else {
     battVoltage2 = currFiltered;
+    filterUpdated2 = false;
   }
   return currFiltered;
 }
