@@ -1,8 +1,9 @@
 #include "irmeas.h"
 
 #define SETPOINT_COUNT 7
-const float irSetpoint[SETPOINT_COUNT] = {0.5f, 1.0f, 1.5f, 2.0f,
-                                          1.5f, 1.0f, 0.5f};
+const float irSetpoint[SETPOINT_COUNT] = {
+    1.2f, 1.6f, 0.8f, 2.0f,
+    0.4f, 1.6f, 0.8f};  // First setpoint is just to figure out orig voltage
 
 uint32_t setpointHitTime1 = 0;
 uint32_t setpointHitTime2 = 0;
@@ -20,6 +21,8 @@ float origVoltage1 = 0.0f;
 float origVoltage2 = 0.0f;
 
 #define SETPOINT_KI 0.4f
+#define kI_0A 0.18f  // Integrator gain when low battery current (battery likely
+// disconnected, its possible that its just initial connection though)
 
 void ResetIRMeas(bool batt1) {
   if (batt1) {
@@ -47,14 +50,6 @@ void IRMeasUpdate(bool batt1, float dT) {
 
   // Check if need to init origVoltage
   float origVoltage = batt1 ? origVoltage1 : origVoltage2;
-  if (origVoltage < 8.5f) {
-    origVoltage = BatteryVoltage(batt1);
-    if (batt1) {
-      origVoltage1 = origVoltage;
-    } else {
-      origVoltage2 = origVoltage;
-    }
-  }
 
   // Controller update for setpoint
   float voltage = BatteryVoltage(batt1);
@@ -65,7 +60,11 @@ void IRMeasUpdate(bool batt1, float dT) {
     float irSet = irSetpoint[setpointInd];
     float battCurr = BatteryCurrent(batt1);
     float err = irSet - battCurr;
-    currApplVolt += SETPOINT_KI * err * dT;
+    if (battCurr < 0.04f) {
+      currApplVolt += kI_0A * err * dT;
+    } else {
+      currApplVolt += SETPOINT_KI * err * dT;
+    }
 
     if (currApplVolt > 15.0f) {
       currApplVolt = 15.0f;
@@ -84,11 +83,21 @@ void IRMeasUpdate(bool batt1, float dT) {
     // See if we've been at the setpoint for 1s
     if (HAL_GetTick() - setpointHitTime >= 1000) {
       // Save measurement
-      float irValIncr = (voltage - origVoltage) / BatteryCurrent(batt1);
-      if (batt1) {
-        irVal1 += irValIncr;
+      if (setpointInd == 0) {
+        // First setpoint, save original voltage
+        if (batt1) {
+          origVoltage1 = voltage;
+        } else {
+          origVoltage2 = voltage;
+        }
       } else {
-        irVal2 += irValIncr;
+        float irValIncr =
+            (voltage - origVoltage) / (BatteryCurrent(batt1) - irSetpoint[0]);
+        if (batt1) {
+          irVal1 += irValIncr;
+        } else {
+          irVal2 += irValIncr;
+        }
       }
 
       // Move to next setpoint
@@ -115,10 +124,11 @@ void IRMeasUpdate(bool batt1, float dT) {
 }
 
 float GetIRValue(bool batt1) {
-  if ((batt1 ? setpointInd1 : setpointInd2) == 0) {
+  if ((batt1 ? setpointInd1 : setpointInd2) < 2) {
     return 0.0f;
   }
-  return (batt1 ? irVal1 / setpointInd1 : irVal2 / setpointInd2) * 1000.0f;
+  return (batt1 ? irVal1 / (setpointInd1 - 1) : irVal2 / (setpointInd2 - 1)) *
+         1000.0f;
 }
 
 bool IRMeasDone(bool batt1) {

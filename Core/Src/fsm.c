@@ -290,14 +290,8 @@ void fsm_IRMEAS(bool batt1, float dT) {
   // Writes
   LEDWrite(batt1, 0.2f, 0.0f, 0.1f);
 
-  // Let orig voltage measurement settle
-  if (GetChargeStateTime(batt1) < 1500) {
-    EnableReg(batt1, false);
-    return;
-  }
-
   // Check if battery disconnected
-  if (IRMeasDone(batt1) || GetChargeStateTime(batt1) < 7500) {
+  if (IRMeasDone(batt1) || GetChargeStateTime(batt1) < 5000) {
     // Battery isn't powered or getting up to current
     if (BatteryVoltage(batt1) < 8.5f) {  // Battery disconnected
       SetChargeState(CS_DISCONNECTED, batt1);
