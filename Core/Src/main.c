@@ -312,13 +312,13 @@ int main(void) {
     fsm_Run(false, dT);
 
     // Render
-    if (HAL_GetTick() - lastRender > 100) {
+    if (HAL_GetTick() - lastRender > 200) {
       fsm_Render(true);
       lastRender = HAL_GetTick();
       rendered2 = false;
     }
     // Render second display 180deg out of phase
-    if (HAL_GetTick() - lastRender > 50 && !rendered2) {
+    if (HAL_GetTick() - lastRender > 100 && !rendered2) {
       fsm_Render(false);
       rendered2 = true;
     }

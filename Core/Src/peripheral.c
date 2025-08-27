@@ -581,10 +581,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   (void)hadc;
   adcReady = true;
 }
-// TODO: Determine time this takes
 
 bool filterUpdated1 = false;
 bool filterUpdated2 = false;
+// Takes 19ms
 void UpdateADC() {
   // uint32_t start = HAL_GetTick();
   uint32_t sums[9] = {0};
@@ -626,7 +626,7 @@ float BatteryVoltage(bool chan1) {
   }
 
   float val = batt_adc[chan1 ? 0 : 1] * ANALOG_SCALE;
-  if (fabsf(currFiltered - val) > 0.15f) {
+  if (fabsf(currFiltered - val) > 0.3f) {
     currFiltered = val;
   } else {
     currFiltered = currFiltered * 0.95f + val * 0.05f;

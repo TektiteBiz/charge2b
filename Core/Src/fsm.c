@@ -142,12 +142,18 @@ void fsm_DISCONNECTED(bool batt1) {
 
 uint32_t voltageDropTime1 = 0;
 uint32_t voltageDropTime2 = 0;
+uint32_t currentStableTime1 = 0;
+uint32_t currentStableTime2 = 0;
 void fsm_CHARGE(bool batt1, float dT) {
   // Writes
   LEDWrite(batt1, 0.4f, 0.0f, 0.0f);
 
   // Charge battery
   ControlUpdate(batt1, dT);
+
+  if (!batt1) {
+    printf("volt:%f,curr:%f\n", BatteryVoltage(batt1), BatteryCurrent(batt1));
+  }
 
   // Check if precharge needed
   if (BatteryVoltage(batt1) < 10.0f) {
@@ -197,13 +203,29 @@ void fsm_CHARGE(bool batt1, float dT) {
   // First, make sure current is nominal
   float currErr =
       fabsf(CHARGE_CURRENT[getChargeMode(batt1)] - BatteryCurrent(batt1));
-  if (currErr > 0.03f) {
+  uint32_t currentStableTime =
+      (batt1 ? currentStableTime1 : currentStableTime2);
+  if (currErr > 0.05f) {
+    // Current unstable
+    if (batt1) {
+      currentStableTime1 = 0;
+    } else {
+      currentStableTime2 = 0;
+    }
     return;
+  } else if (currentStableTime == 0) {
+    // Current is stable!
+    if (batt1) {
+      currentStableTime1 = HAL_GetTick();
+    } else {
+      currentStableTime2 = HAL_GetTick();
+    }
   }
 
   // Maximum voltage recording
   float maxVolt = batt1 ? maxVoltage1 : maxVoltage2;
-  if (BatteryVoltage(batt1) > maxVolt) {
+  if (BatteryVoltage(batt1) > maxVolt &&
+      HAL_GetTick() - currentStableTime > 10000) {
     if (batt1) {
       maxVoltage1 = BatteryVoltage(batt1);
       voltageDropTime1 = 0;
