@@ -5,6 +5,6 @@
 #include "peripheral.h"
 
 void ResetCurrent(bool chan1, float current);
-void ControlUpdate(bool batt1, float dT);
+bool ControlUpdate(bool batt1, float dT);
 
 #endif /* __CONTROL_H */

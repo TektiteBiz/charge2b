@@ -149,11 +149,15 @@ void fsm_CHARGE(bool batt1, float dT) {
   LEDWrite(batt1, 0.4f, 0.0f, 0.0f);
 
   // Charge battery
-  ControlUpdate(batt1, dT);
-
-  if (!batt1) {
-    printf("volt:%f,curr:%f\n", BatteryVoltage(batt1), BatteryCurrent(batt1));
+  if (ControlUpdate(batt1, dT)) {
+    // Hit max charger voltage
+    setChargeError(CHARGE_OVERVOLTAGE, batt1);
+    SetChargeState(CS_ERROR, batt1);
   }
+
+  /*if (!batt1) {
+    printf("volt:%f,curr:%f\n", BatteryVoltage(batt1), BatteryCurrent(batt1));
+  }*/
 
   // Check if precharge needed
   if (BatteryVoltage(batt1) < 10.0f) {
@@ -176,7 +180,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.3f) {
+  if (BatteryVoltage(batt1) > 14.7f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -205,6 +209,19 @@ void fsm_CHARGE(bool batt1, float dT) {
       fabsf(CHARGE_CURRENT[getChargeMode(batt1)] - BatteryCurrent(batt1));
   uint32_t currentStableTime =
       (batt1 ? currentStableTime1 : currentStableTime2);
+  // If current error is over 0.15A, something got messed up - reset max
+  // voltage, timers
+  if (currErr > 0.15f) {
+    if (batt1) {
+      maxVoltage1 = 0.0f;
+      voltageDropTime1 = 0;
+      currentStableTime1 = 0;
+    } else {
+      maxVoltage2 = 0.0f;
+      voltageDropTime2 = 0;
+      currentStableTime2 = 0;
+    }
+  }
   if (currErr > 0.05f) {
     // Current unstable
     if (batt1) {
@@ -246,7 +263,8 @@ void fsm_CHARGE(bool batt1, float dT) {
     }
 
     // Check if voltage drop time exceeded
-    if (HAL_GetTick() - voltageDropTime > 2000) {
+    if (HAL_GetTick() - voltageDropTime > 10000 &&
+        HAL_GetTick() - currentStableTime > 10000) {
       // Go to top-up phase
       ResetCurrent(batt1, TOPUP_CURRENT);
       SetChargeState(CS_TOPUP, batt1);
@@ -280,7 +298,12 @@ void fsm_OVERTEMP(bool batt1) {
 void fsm_TOPUP(bool batt1, float dT) {
   // Writes
   LEDWrite(batt1, 0.0f, 0.4f, 0.0f);
-  ControlUpdate(batt1, dT);
+  // Charge battery
+  if (ControlUpdate(batt1, dT)) {
+    // Hit max charger voltage
+    setChargeError(CHARGE_OVERVOLTAGE, batt1);
+    SetChargeState(CS_ERROR, batt1);
+  }
 
   if (GetChargeStateTime(batt1) < 5000) {
     return;
@@ -294,7 +317,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.4f) {
+  if (BatteryVoltage(batt1) > 14.7f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -328,7 +351,7 @@ void fsm_IRMEAS(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.3f) {
+  if (BatteryVoltage(batt1) > 14.5f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);

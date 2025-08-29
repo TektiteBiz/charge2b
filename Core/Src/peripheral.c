@@ -554,7 +554,7 @@ void EnableReg(bool chan1, bool en) {
 const float REG_OFF = REG_VFB * (1 + REG_R1 / REG_R2 + REG_R1 / REG_R3);
 const float REG_SCALE = REG_R3 / REG_R1 * (4095.0f / 3.3f);
 void WriteVoltage(bool chan1, float voltage) {
-  if (voltage < 8.5f || voltage > 15.0f) {
+  if (voltage < 8.5f || voltage > 15.3f) {
     // Voltage out of range, disable regulator
     EnableReg(chan1, false);
     return;

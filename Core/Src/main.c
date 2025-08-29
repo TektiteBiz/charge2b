@@ -202,10 +202,10 @@ int main(void) {
            current, status);
 
     if (i == 1 &&
-        (!FLOAT_EQUALS(voltage, 15.0f) || !FLOAT_EQUALS(current, 4.3f))) {
-      USB_WritePDO(i, 15.0f, 4.3f);
+        (!FLOAT_EQUALS(voltage, 16.0f) || !FLOAT_EQUALS(current, 4.0f))) {
+      USB_WritePDO(i, 16.0f, 4.0f);
       needsWrite = true;
-      printf("Updated PDO %d to Voltage - 15.0, Current - 4.3\n", i + 1);
+      printf("Updated PDO %d to Voltage - 16.0, Current - 4.0\n", i + 1);
     }
 
     if (i == 2 &&

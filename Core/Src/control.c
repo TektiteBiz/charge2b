@@ -20,7 +20,7 @@ void ResetCurrent(bool chan1, float current) {
     m_i2 = 8.5f;  // Reset integrator for channel 2
   }
 }
-void ControlUpdate(bool batt1, float dT) {
+bool ControlUpdate(bool batt1, float dT) {
   float voltage = BatteryVoltage(batt1);
   float iNew = batt1 ? m_i1 : m_i2;
   if ((voltage - iNew) > 0.5f) {  // Battery voltage higher than integrator
@@ -35,13 +35,18 @@ void ControlUpdate(bool batt1, float dT) {
     }
     iNew += integrator * err * dT;  // Integrate error
   }
-  if (iNew > 15.0f) {  // Limit voltage
-    iNew = 15.0f;
+  if (iNew > 15.3f) {  // Limit voltage
+    iNew = 15.3f;
   }
+  // printf("applv:%f\n", iNew);
   WriteVoltage(batt1, iNew);
   if (batt1) {
     m_i1 = iNew;
   } else {
     m_i2 = iNew;
   }
+  if (iNew > 15.299f) {
+    return true;
+  }
+  return false;
 }
