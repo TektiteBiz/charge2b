@@ -66,8 +66,8 @@ void IRMeasUpdate(bool batt1, float dT) {
       currApplVolt += SETPOINT_KI * err * dT;
     }
 
-    if (currApplVolt > 15.3f) {
-      currApplVolt = 15.3f;
+    if (currApplVolt > 15.7f) {
+      currApplVolt = 15.7f;
     }
   }
   if (batt1) {

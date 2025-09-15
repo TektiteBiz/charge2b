@@ -35,17 +35,16 @@ bool ControlUpdate(bool batt1, float dT) {
     }
     iNew += integrator * err * dT;  // Integrate error
   }
-  if (iNew > 15.3f) {  // Limit voltage
-    iNew = 15.3f;
+  if (iNew > 15.7f) {  // Limit voltage
+    iNew = 15.7f;
   }
-  // printf("applv:%f\n", iNew);
   WriteVoltage(batt1, iNew);
   if (batt1) {
     m_i1 = iNew;
   } else {
     m_i2 = iNew;
   }
-  if (iNew > 15.299f) {
+  if (iNew > 15.699f) {
     return true;
   }
   return false;

@@ -549,12 +549,12 @@ void EnableReg(bool chan1, bool en) {
 // Equation is inverse of (1) in https://www.ti.com/lit/an/slyt777/slyt777.pdf
 #define REG_R1 100000.0f
 #define REG_R2 8200.0f
-#define REG_R3 47000.0f
+#define REG_R3 39000.0f
 #define REG_VFB 1.0f
 const float REG_OFF = REG_VFB * (1 + REG_R1 / REG_R2 + REG_R1 / REG_R3);
 const float REG_SCALE = REG_R3 / REG_R1 * (4095.0f / 3.3f);
 void WriteVoltage(bool chan1, float voltage) {
-  if (voltage < 8.5f || voltage > 15.3f) {
+  if (voltage < 7.4f || voltage > 15.73f) {
     // Voltage out of range, disable regulator
     EnableReg(chan1, false);
     return;

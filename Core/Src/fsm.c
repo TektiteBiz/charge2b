@@ -180,7 +180,7 @@ void fsm_CHARGE(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.7f) {
+  if (BatteryVoltage(batt1) > 15.3f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -317,7 +317,7 @@ void fsm_TOPUP(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.7f) {
+  if (BatteryVoltage(batt1) > 15.3f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
@@ -351,7 +351,7 @@ void fsm_IRMEAS(bool batt1, float dT) {
   }
 
   // Check if overvoltage
-  if (BatteryVoltage(batt1) > 14.5f) {
+  if (BatteryVoltage(batt1) > 15.3f) {
     // Overvoltage detected
     setChargeError(CHARGE_OVERVOLTAGE, batt1);
     SetChargeState(CS_ERROR, batt1);
